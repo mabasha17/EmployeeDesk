@@ -1,0 +1,67 @@
+@startuml
+
+' External Entities
+rectangle "Employee" as Employee
+rectangle "Admin" as Admin
+rectangle "HR Manager" as HR
+
+' Processes
+rectangle "Authentication" as Auth
+rectangle "Employee Portal" as Portal
+rectangle "Leave Management" as Leave
+rectangle "Salary Management" as Salary
+rectangle "Attendance System" as Attendance
+rectangle "Profile Management" as Profile
+
+' Data Stores
+database "User Database" as UserDB
+database "Employee Database" as EmpDB
+database "Leave Database" as LeaveDB
+database "Salary Database" as SalaryDB
+database "Attendance Database" as AttDB
+
+' Data Flows
+Employee --> Auth: Login Credentials
+Auth --> UserDB: Verify User
+UserDB --> Auth: User Data
+Auth --> Portal: Authentication Token
+
+Portal --> EmpDB: Fetch Employee Data
+EmpDB --> Portal: Employee Information
+Portal --> Employee: Display Dashboard
+
+Employee --> Leave: Leave Request
+Leave --> LeaveDB: Store Leave Data
+LeaveDB --> Leave: Leave Records
+Leave --> Employee: Leave Status
+
+Employee --> Salary: Salary Query
+Salary --> SalaryDB: Fetch Salary Data
+SalaryDB --> Salary: Salary Information
+Salary --> Employee: Salary Details
+
+Employee --> Attendance: Check In/Out
+Attendance --> AttDB: Update Attendance
+AttDB --> Attendance: Attendance Records
+Attendance --> Employee: Attendance Status
+
+Employee --> Profile: Update Request
+Profile --> EmpDB: Update Profile
+EmpDB --> Profile: Updated Data
+Profile --> Employee: Profile View
+
+' Admin Flows
+Admin --> Portal: Access Admin Panel
+Portal --> Admin: Admin Dashboard
+Admin --> Leave: Approve/Reject Leave
+Admin --> Salary: Manage Salary
+Admin --> Attendance: View Reports
+
+' HR Flows
+HR --> Portal: Access HR Panel
+Portal --> HR: HR Dashboard
+HR --> Leave: Process Leave
+HR --> Salary: Process Salary
+HR --> Attendance: Manage Attendance
+
+@enduml 

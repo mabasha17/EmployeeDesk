@@ -1,0 +1,56 @@
+@startuml EMS Level 0 DFD
+
+skinparam componentStyle uml2
+skinparam component {
+  BackgroundColor LightBlue
+  BorderColor DarkBlue
+}
+
+skinparam database {
+  BackgroundColor LightGreen
+  BorderColor DarkGreen
+}
+
+skinparam actor {
+  BackgroundColor LightYellow
+  BorderColor DarkYellow
+}
+
+actor "Admin" as admin
+actor "Employee" as employee
+
+database "Employee Management System" as ems {
+  component "Admin Portal" as ap
+  component "Employee Portal" as ep
+  database "Database" as db
+}
+
+' Admin Data Flows
+admin --> ap : Login Credentials
+admin --> ap : Employee Management Data
+admin --> ap : Leave Approvals/Rejections
+admin --> ap : Salary Management Data
+
+ap --> admin : Dashboard Analytics
+ap --> admin : Employee List
+ap --> admin : Pending Leave Requests
+ap --> admin : Salary Reports
+
+' Employee Data Flows
+employee --> ep : Login Credentials
+employee --> ep : Profile Updates
+employee --> ep : Leave Applications
+employee --> ep : View Requests
+
+ep --> employee : Dashboard Information
+ep --> employee : Profile Details
+ep --> employee : Leave Status
+ep --> employee : Salary History
+
+' Internal Data Flows
+ap --> db : Store/Update Data
+ep --> db : Store/Update Data
+db --> ap : Retrieve Data
+db --> ep : Retrieve Data
+
+@enduml 

@@ -1,0 +1,102 @@
+@startuml EMS Use Case Diagram
+
+' Actors
+actor "Admin" as Admin
+actor "Employee" as Employee
+
+' System Boundary
+rectangle "Employee Management System" as EMS {
+  ' Authentication Use Cases
+  usecase "Login" as UC1
+  usecase "Logout" as UC2
+  usecase "Reset Password" as UC3
+  
+  ' Admin Use Cases
+  usecase "Manage Employees" as UC4
+  usecase "Manage Departments" as UC5
+  usecase "Manage Leaves" as UC6
+  usecase "Manage Salaries" as UC7
+  usecase "Manage Attendance" as UC8
+  usecase "Generate Reports" as UC9
+  usecase "Manage System Settings" as UC10
+  
+  ' Employee Use Cases
+  usecase "View Profile" as UC11
+  usecase "Update Profile" as UC12
+  usecase "Apply for Leave" as UC13
+  usecase "View Leave Status" as UC14
+  usecase "View Salary Details" as UC15
+  usecase "Download Payslip" as UC16
+  usecase "Mark Attendance" as UC17
+  usecase "View Attendance History" as UC18
+}
+
+' Relationships
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC4
+Admin --> UC5
+Admin --> UC6
+Admin --> UC7
+Admin --> UC8
+Admin --> UC9
+Admin --> UC10
+
+Employee --> UC1
+Employee --> UC2
+Employee --> UC3
+Employee --> UC11
+Employee --> UC12
+Employee --> UC13
+Employee --> UC14
+Employee --> UC15
+Employee --> UC16
+Employee --> UC17
+Employee --> UC18
+
+' Include Relationships
+UC4 ..> UC5 : include
+UC6 ..> UC4 : include
+UC7 ..> UC4 : include
+UC8 ..> UC4 : include
+UC9 ..> (UC4, UC5, UC6, UC7, UC8) : include
+UC13 ..> UC14 : include
+UC15 ..> UC16 : include
+UC17 ..> UC18 : include
+
+' Extend Relationships
+UC1 <.. UC3 : extends
+UC12 <.. UC11 : extends
+
+' Notes
+note right of UC4
+  Includes:
+  - Add Employee
+  - Edit Employee
+  - Delete Employee
+  - View Employee List
+end note
+
+note right of UC6
+  Includes:
+  - Approve/Reject Leaves
+  - View Leave Requests
+  - Manage Leave Types
+end note
+
+note right of UC7
+  Includes:
+  - Process Salary
+  - Generate Payslips
+  - Manage Salary Structure
+end note
+
+note right of UC8
+  Includes:
+  - View Attendance
+  - Manage Attendance Rules
+  - Generate Attendance Reports
+end note
+
+@enduml 

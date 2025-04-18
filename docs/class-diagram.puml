@@ -1,0 +1,160 @@
+@startuml EMS Class Diagram
+
+skinparam class {
+  BackgroundColor LightBlue
+  BorderColor DarkBlue
+}
+
+class User {
+  +String _id
+  +String username
+  +String email
+  +String password
+  +String role
+  +Date createdAt
+  +Date updatedAt
+  +login(): boolean
+  +logout(): void
+  +resetPassword(): void
+}
+
+class Admin {
+  -department: String
+  +manageEmployees(): void
+  +approveLeave(): void
+  +rejectLeave(): void
+  +manageSalary(): void
+  +viewDashboard(): void
+}
+
+class Employee {
+  +String _id
+  +String name
+  +String email
+  +String department
+  +String position
+  +Date joiningDate
+  +String contactNumber
+  +String address
+  +String bankAccount
+  +Date createdAt
+  +Date updatedAt
+  +viewDashboard(): void
+  +applyLeave(): void
+  +viewSalary(): void
+}
+
+class Department {
+  -id: String
+  -name: String
+  -managerId: String
+  -totalEmployees: number
+  +addEmployee(): void
+  +removeEmployee(): void
+  +getEmployeeCount(): number
+}
+
+class Salary {
+  +String _id
+  +String employeeId
+  +Number basicSalary
+  +Number hra
+  +Number da
+  +Number totalSalary
+  +String bankAccount
+  +String status
+  +Date month
+  +Date creditedDate
+  +Date createdAt
+  +Date updatedAt
+  +calculateTotal(): void
+  +processPayment(): void
+}
+
+class Leave {
+  +String _id
+  +String employeeId
+  +String employeeName
+  +String type
+  +Date startDate
+  +Date endDate
+  +String reason
+  +String status
+  +Date createdAt
+  +Date updatedAt
+  +applyLeave(): void
+  +approveLeave(): void
+  +rejectLeave(): void
+  +getStatus(): String
+}
+
+class AdminDashboard {
+  -totalEmployees: number
+  -pendingLeaves: number
+  -totalDepartments: number
+  -monthlySalary: number
+  +getStatistics(): Object
+  +viewAnalytics(): void
+}
+
+class EmployeeDashboard {
+  -employeeDetails: Object
+  -leaveBalance: number
+  -salaryDetails: Object
+  +getDetails(): Object
+  +viewProfile(): void
+}
+
+' Inheritance
+User <|-- Admin
+User <|-- Employee
+
+' Associations
+Admin "1" -- "*" Employee : manages
+Admin "1" -- "*" Department : oversees
+Admin "1" -- "1" AdminDashboard : views
+Admin "1" -- "*" Leave : approves/rejects
+Admin "1" -- "*" Salary : manages
+
+Employee "1" -- "*" Salary : receives
+Employee "1" -- "*" Leave : requests
+Employee "1" -- "1" EmployeeDashboard : views
+Employee "1" -- "1" Department : belongs to
+
+Department "1" -- "*" Employee : contains
+
+Leave "1" -- "1" Employee : belongs to
+Salary "1" -- "1" Employee : belongs to
+
+' Notes
+note right of User
+  Handles authentication
+  and authorization
+end note
+
+note right of Employee
+  Core employee information
+  and personal details
+end note
+
+note right of Salary
+  Monthly salary details
+  and payment processing
+end note
+
+note right of Leave
+  Leave requests and
+  approval tracking
+end note
+
+note right of AdminDashboard
+  Admin portal dashboard
+  with analytics
+end note
+
+note right of EmployeeDashboard
+  Employee portal dashboard
+  with personal details
+end note
+
+@enduml 

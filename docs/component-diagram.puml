@@ -1,0 +1,105 @@
+@startuml EMS Component Diagram
+
+' Frontend Components
+package "Frontend" {
+  [React Application] as Frontend {
+    [Admin Dashboard] as AdminDashboard
+    [Employee Portal] as EmployeePortal
+    [Authentication] as AuthUI
+  }
+}
+
+' Backend Components
+package "Backend" {
+  [Express Server] as Server {
+    [REST API] as API
+    [Error Handler] as ErrorHandler
+    [Request Logger] as Logger
+  }
+  
+  package "Controllers" {
+    [Auth Controller] as AuthCtrl
+    [Employee Controller] as EmpCtrl
+    [Leave Controller] as LeaveCtrl
+    [Salary Controller] as SalaryCtrl
+    [Attendance Controller] as AttendCtrl
+  }
+  
+  package "Models" {
+    [User Model] as UserModel
+    [Employee Model] as EmpModel
+    [Leave Model] as LeaveModel
+    [Salary Model] as SalaryModel
+    [Attendance Model] as AttendModel
+  }
+  
+  package "Middleware" {
+    [Authentication] as AuthMiddleware
+    [Authorization] as AuthzMiddleware
+    [Validation] as ValidationMiddleware
+  }
+}
+
+' Database
+database "MongoDB" as DB {
+  [Users Collection] as Users
+  [Employees Collection] as Employees
+  [Leaves Collection] as Leaves
+  [Salaries Collection] as Salaries
+  [Attendance Collection] as Attendance
+}
+
+' Frontend to Backend Connections
+Frontend --> API : HTTP/HTTPS
+AdminDashboard --> API : REST Calls
+EmployeePortal --> API : REST Calls
+AuthUI --> API : Auth Requests
+
+' Server Internal Connections
+API --> AuthMiddleware : Validate
+API --> AuthzMiddleware : Authorize
+API --> ValidationMiddleware : Validate
+API --> ErrorHandler : Handle Errors
+API --> Logger : Log Requests
+
+' Controller Connections
+API --> AuthCtrl : Route
+API --> EmpCtrl : Route
+API --> LeaveCtrl : Route
+API --> SalaryCtrl : Route
+API --> AttendCtrl : Route
+
+' Model to Controller Connections
+AuthCtrl --> UserModel : Uses
+EmpCtrl --> EmpModel : Uses
+LeaveCtrl --> LeaveModel : Uses
+SalaryCtrl --> SalaryModel : Uses
+AttendCtrl --> AttendModel : Uses
+
+' Model to Database Connections
+UserModel --> Users : CRUD
+EmpModel --> Employees : CRUD
+LeaveModel --> Leaves : CRUD
+SalaryModel --> Salaries : CRUD
+AttendModel --> Attendance : CRUD
+
+' Notes
+note right of Frontend
+  React-based SPA with
+  role-based access control
+  and responsive design
+end note
+
+note right of Server
+  Express.js server with
+  RESTful API endpoints
+  and middleware pipeline
+end note
+
+note right of DB
+  MongoDB database with
+  collections for different
+  entities and relationships
+end note
+
+@enduml 

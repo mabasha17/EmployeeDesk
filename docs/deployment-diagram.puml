@@ -1,0 +1,94 @@
+@startuml
+
+' Client Nodes
+node "Client Browser" {
+  component "React Frontend" as Frontend {
+    component "Admin Portal SPA" as AdminSPA
+    component "Employee Portal SPA" as EmpSPA
+    component "Authentication UI" as AuthUI
+  }
+}
+
+' Server Nodes
+node "Application Server" {
+  component "Express.js Server" as Express {
+    component "Admin API" as AdminAPI
+    component "Employee API" as EmpAPI
+    component "Auth API" as AuthAPI
+  }
+  
+  component "Middleware" as Middleware {
+    component "JWT Auth" as JWT
+    component "Role Guard" as RoleGuard
+    component "Request Validator" as Validator
+  }
+}
+
+node "Database Server" {
+  database "MongoDB" as MongoDB {
+    component "Users Collection" as Users
+    component "Employees Collection" as Employees
+    component "Leaves Collection" as Leaves
+    component "Salaries Collection" as Salaries
+  }
+}
+
+' Load Balancer
+node "Load Balancer" as LB {
+  component "Nginx" as Nginx
+}
+
+' Connections
+Client --> LB: HTTPS
+LB --> Frontend: Route Traffic
+
+AdminSPA --> AdminAPI: REST API Calls
+EmpSPA --> EmpAPI: REST API Calls
+AuthUI --> AuthAPI: Auth Requests
+
+AdminAPI --> Middleware: Validate
+EmpAPI --> Middleware: Validate
+AuthAPI --> JWT: Generate Token
+
+Middleware --> MongoDB: Query Data
+JWT --> Users: Verify
+
+' Database Access
+AdminAPI --> Users: CRUD
+AdminAPI --> Employees: CRUD
+AdminAPI --> Leaves: CRUD
+AdminAPI --> Salaries: CRUD
+
+EmpAPI --> Employees: Read/Update
+EmpAPI --> Leaves: Create/Read
+EmpAPI --> Salaries: Read
+
+' Notes
+note right of Frontend
+  React-based portals with
+  role-based access control
+end note
+
+note right of Express
+  RESTful APIs with
+  separate routes for
+  admin and employee
+end note
+
+note right of MongoDB
+  Document-based NoSQL
+  with collections for
+  different entities
+end note
+
+note right of Middleware
+  Security and validation
+  middleware layer
+end note
+
+note right of LB
+  Load balancing and
+  SSL termination
+end note
+
+@enduml 

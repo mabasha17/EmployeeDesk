@@ -1,0 +1,83 @@
+@startuml EMS Object Diagram
+
+skinparam class {
+  BackgroundColor LightBlue
+  BorderColor DarkBlue
+}
+
+skinparam object {
+  BackgroundColor LightGreen
+  BorderColor DarkGreen
+}
+
+object "admin1" as admin1 {
+  id = "ADM001"
+  username = "john.doe"
+  role = "Administrator"
+  email = "john.doe@company.com"
+  department = "IT"
+}
+
+object "employee1" as emp1 {
+  id = "EMP001"
+  name = "Jane Smith"
+  position = "Software Engineer"
+  department = "IT"
+  status = "Active"
+  joinDate = "2023-01-15"
+}
+
+object "employee2" as emp2 {
+  id = "EMP002"
+  name = "Mike Johnson"
+  position = "HR Manager"
+  department = "HR"
+  status = "Active"
+  joinDate = "2022-06-20"
+}
+
+object "leave1" as leave1 {
+  id = "LEV001"
+  employeeId = "EMP001"
+  type = "Annual"
+  startDate = "2024-03-20"
+  endDate = "2024-03-25"
+  status = "Pending"
+}
+
+object "attendance1" as att1 {
+  id = "ATT001"
+  employeeId = "EMP001"
+  date = "2024-03-15"
+  checkIn = "09:00"
+  checkOut = "17:00"
+  status = "Present"
+}
+
+object "department1" as dept1 {
+  id = "DEPT001"
+  name = "IT"
+  managerId = "EMP001"
+  totalEmployees = 25
+}
+
+object "report1" as report1 {
+  id = "REP001"
+  type = "Monthly Attendance"
+  generatedBy = "ADM001"
+  date = "2024-03-15"
+  status = "Generated"
+}
+
+' Relationships
+admin1 --> emp1 : manages
+admin1 --> emp2 : manages
+admin1 --> report1 : generates
+emp1 --> leave1 : requests
+emp1 --> att1 : has
+emp1 --> dept1 : belongs to
+emp2 --> dept1 : belongs to
+dept1 --> emp1 : contains
+dept1 --> emp2 : contains
+
+@enduml 

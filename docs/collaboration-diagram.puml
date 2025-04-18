@@ -1,0 +1,86 @@
+@startuml EMS Collaboration Diagram
+
+' Actors
+actor "Admin" as Admin
+actor "Employee" as Employee
+
+' Frontend Components
+component "Admin Portal" as AdminPortal
+component "Employee Portal" as EmpPortal
+component "Auth UI" as AuthUI
+
+' Backend Components
+component "Express Server" as Server
+component "Auth Controller" as AuthCtrl
+component "Employee Controller" as EmpCtrl
+component "Leave Controller" as LeaveCtrl
+component "Salary Controller" as SalaryCtrl
+component "Attendance Controller" as AttendCtrl
+
+' Database
+database "MongoDB" as DB {
+  frame "Collections" {
+    [Users] as Users
+    [Employees] as Employees
+    [Leaves] as Leaves
+    [Salaries] as Salaries
+    [Attendance] as Attendance
+  }
+}
+
+' Authentication Flow
+Admin --> AuthUI : 1. Access Login
+AuthUI --> Server : 2. Submit Credentials
+Server --> AuthCtrl : 3. Validate
+AuthCtrl --> DB : 4. Query Users
+DB --> AuthCtrl : 5. Return User Data
+AuthCtrl --> Server : 6. Generate Token
+Server --> AuthUI : 7. Return Token
+AuthUI --> Admin : 8. Store Token
+
+' Admin Operations
+Admin --> AdminPortal : 9. Access Dashboard
+AdminPortal --> Server : 10. Request Data
+Server --> EmpCtrl : 11. Get Employees
+EmpCtrl --> DB : 12. Query Employees
+DB --> EmpCtrl : 13. Return Data
+EmpCtrl --> Server : 14. Process Data
+Server --> AdminPortal : 15. Display Data
+
+' Employee Management
+Admin --> AdminPortal : 16. Manage Employee
+AdminPortal --> Server : 17. Update Request
+Server --> EmpCtrl : 18. Process Update
+EmpCtrl --> DB : 19. Update Employee
+DB --> EmpCtrl : 20. Confirm Update
+EmpCtrl --> Server : 21. Return Status
+Server --> AdminPortal : 22. Show Result
+
+' Leave Management
+Employee --> EmpPortal : 23. Apply Leave
+EmpPortal --> Server : 24. Submit Request
+Server --> LeaveCtrl : 25. Process Leave
+LeaveCtrl --> DB : 26. Store Leave
+DB --> LeaveCtrl : 27. Confirm Storage
+LeaveCtrl --> Server : 28. Return Status
+Server --> EmpPortal : 29. Show Result
+
+' Salary Processing
+Admin --> AdminPortal : 30. Process Salary
+AdminPortal --> Server : 31. Submit Request
+Server --> SalaryCtrl : 32. Process Payment
+SalaryCtrl --> DB : 33. Update Salary
+DB --> SalaryCtrl : 34. Confirm Update
+SalaryCtrl --> Server : 35. Return Status
+Server --> AdminPortal : 36. Show Result
+
+' Attendance Management
+Employee --> EmpPortal : 37. Mark Attendance
+EmpPortal --> Server : 38. Submit Attendance
+Server --> AttendCtrl : 39. Process Attendance
+AttendCtrl --> DB : 40. Store Attendance
+DB --> AttendCtrl : 41. Confirm Storage
+AttendCtrl --> Server : 42. Return Status
+Server --> EmpPortal : 43. Show Result
+
+@enduml 

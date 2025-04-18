@@ -1,0 +1,99 @@
+@startuml EMS Level 1 DFD
+
+skinparam componentStyle uml2
+skinparam component {
+  BackgroundColor LightBlue
+  BorderColor DarkBlue
+}
+
+skinparam database {
+  BackgroundColor LightGreen
+  BorderColor DarkGreen
+}
+
+skinparam actor {
+  BackgroundColor LightYellow
+  BorderColor DarkYellow
+}
+
+actor "Admin" as admin
+actor "Employee" as employee
+
+' Databases
+database "User Database" as userDB
+database "Employee Database" as empDB
+database "Leave Database" as leaveDB
+database "Salary Database" as salaryDB
+
+' Admin Portal Components
+component "Admin Portal" as ap {
+  component "Authentication" as auth1
+  component "Dashboard" as dash1
+  component "Employee Management" as empMgt
+  component "Leave Management" as leaveMgt
+  component "Salary Management" as salaryMgt
+}
+
+' Employee Portal Components
+component "Employee Portal" as ep {
+  component "Authentication" as auth2
+  component "Dashboard" as dash2
+  component "Profile" as profile
+  component "Leave Application" as leaveApp
+  component "Salary View" as salaryView
+}
+
+' Admin Portal Data Flows
+admin --> auth1 : Login Credentials
+auth1 --> userDB : Validate Admin
+userDB --> auth1 : Admin Data
+auth1 --> admin : Authentication Status
+
+admin --> empMgt : Add/Edit/Delete Employee
+empMgt --> empDB : CRUD Operations
+empDB --> empMgt : Employee Data
+empMgt --> admin : Employee List
+
+admin --> leaveMgt : Approve/Reject Leave
+leaveMgt --> leaveDB : Update Leave Status
+leaveDB --> leaveMgt : Leave Data
+leaveMgt --> admin : Pending Requests
+
+admin --> salaryMgt : Process Salary
+salaryMgt --> salaryDB : Update Salary
+salaryDB --> salaryMgt : Salary Data
+salaryMgt --> admin : Salary Reports
+
+' Employee Portal Data Flows
+employee --> auth2 : Login Credentials
+auth2 --> userDB : Validate Employee
+userDB --> auth2 : Employee Data
+auth2 --> employee : Authentication Status
+
+employee --> profile : View/Update Profile
+profile --> empDB : Update Profile
+empDB --> profile : Profile Data
+profile --> employee : Profile Details
+
+employee --> leaveApp : Submit Leave
+leaveApp --> leaveDB : Store Leave Request
+leaveDB --> leaveApp : Leave Status
+leaveApp --> employee : Request Status
+
+employee --> salaryView : View Salary
+salaryView --> salaryDB : Fetch Salary
+salaryDB --> salaryView : Salary History
+salaryView --> employee : Salary Details
+
+' Dashboard Data Flows
+dash1 --> empDB : Fetch Stats
+dash1 --> leaveDB : Fetch Pending
+dash1 --> salaryDB : Fetch Summary
+dash1 --> admin : Analytics Display
+
+dash2 --> empDB : Fetch Details
+dash2 --> leaveDB : Fetch Status
+dash2 --> salaryDB : Fetch History
+dash2 --> employee : Dashboard Display
+
+@enduml 

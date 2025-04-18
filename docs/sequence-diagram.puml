@@ -1,0 +1,94 @@
+@startuml
+
+actor User
+participant "Frontend" as FE
+participant "Backend" as BE
+participant "Database" as DB
+
+' Login Flow
+User -> FE: Access Login Page
+FE -> User: Display Login Form
+User -> FE: Enter Credentials
+FE -> BE: POST /api/auth/login
+BE -> DB: Verify Credentials
+alt Admin Login
+    DB --> BE: Admin Data
+    BE --> FE: JWT Token (Admin)
+    FE -> User: Redirect to Admin Portal
+else Employee Login
+    DB --> BE: Employee Data
+    BE --> FE: JWT Token (Employee)
+    FE -> User: Redirect to Employee Portal
+end
+
+' Admin Portal Flows
+group Admin Portal
+    ' Dashboard
+    User -> FE: Access Admin Dashboard
+    FE -> BE: GET /api/admin/dashboard
+    BE -> DB: Fetch Dashboard Data
+    DB --> BE: Analytics & Stats
+    BE --> FE: Dashboard Data
+    FE -> User: Display Admin Dashboard
+
+    ' Employee Management
+    User -> FE: Access Employee List
+    FE -> BE: GET /api/employees
+    BE -> DB: Fetch Employees
+    DB --> BE: Employee List
+    BE --> FE: Employee Data
+    FE -> User: Display Employee List
+
+    ' Leave Management
+    User -> FE: Access Leave Requests
+    FE -> BE: GET /api/leaves/pending
+    BE -> DB: Fetch Pending Leaves
+    DB --> BE: Leave Requests
+    BE --> FE: Leave Data
+    FE -> User: Display Leave Requests
+    User -> FE: Approve/Reject Leave
+    FE -> BE: PUT /api/leaves/:id/status
+    BE -> DB: Update Leave Status
+    DB --> BE: Confirmation
+    BE --> FE: Success Response
+    FE -> User: Show Updated Status
+
+    ' Salary Management
+    User -> FE: Access Salary Management
+    FE -> BE: GET /api/salaries
+    BE -> DB: Fetch Salary Data
+    DB --> BE: Salary Information
+    BE --> FE: Salary Details
+    FE -> User: Display Salary Management
+end
+
+' Employee Portal Flows
+group Employee Portal
+    ' Dashboard
+    User -> FE: Access Employee Dashboard
+    FE -> BE: GET /api/employees/:id/dashboard
+    BE -> DB: Fetch Employee Data
+    DB --> BE: Employee Details
+    BE --> FE: Dashboard Data
+    FE -> User: Display Employee Dashboard
+
+    ' Leave Application
+    User -> FE: Access Leave Application
+    FE -> User: Display Leave Form
+    User -> FE: Submit Leave Request
+    FE -> BE: POST /api/leaves
+    BE -> DB: Create Leave Record
+    DB --> BE: Confirmation
+    BE --> FE: Success Response
+    FE -> User: Show Confirmation
+
+    ' Salary View
+    User -> FE: Access Salary Page
+    FE -> BE: GET /api/employees/:id/salary
+    BE -> DB: Fetch Salary Records
+    DB --> BE: Salary History
+    BE --> FE: Salary Data
+    FE -> User: Display Salary Details
+end
+
+@enduml 

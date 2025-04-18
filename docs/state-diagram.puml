@@ -1,0 +1,112 @@
+@startuml EMS State Diagram
+
+skinparam state {
+  BackgroundColor LightBlue
+  BorderColor DarkBlue
+}
+
+skinparam arrow {
+  Color DarkBlue
+}
+
+' Authentication State Diagram
+[*] --> LoginPage : Access System
+LoginPage --> AdminPortal : Admin Login
+LoginPage --> EmployeePortal : Employee Login
+AdminPortal --> LoginPage : Logout
+EmployeePortal --> LoginPage : Logout
+
+' Admin Portal States
+state AdminPortal {
+  [*] --> Dashboard : Access
+  Dashboard --> EmployeeManagement : Manage Employees
+  Dashboard --> LeaveManagement : Manage Leaves
+  Dashboard --> SalaryManagement : Manage Salary
+  
+  state EmployeeManagement {
+    [*] --> ViewEmployees
+    ViewEmployees --> AddEmployee : Add New
+    ViewEmployees --> EditEmployee : Edit
+    ViewEmployees --> DeleteEmployee : Delete
+  }
+  
+  state LeaveManagement {
+    [*] --> ViewPendingLeaves
+    ViewPendingLeaves --> ApproveLeave : Approve
+    ViewPendingLeaves --> RejectLeave : Reject
+  }
+  
+  state SalaryManagement {
+    [*] --> ViewSalaries
+    ViewSalaries --> ProcessSalary : Process
+    ViewSalaries --> UpdateSalary : Update
+  }
+}
+
+' Employee Portal States
+state EmployeePortal {
+  [*] --> Dashboard : Access
+  Dashboard --> Profile : View Profile
+  Dashboard --> LeaveApplication : Apply Leave
+  Dashboard --> SalaryView : View Salary
+  
+  state LeaveApplication {
+    [*] --> CreateLeave
+    CreateLeave --> SubmitLeave : Submit
+    SubmitLeave --> ViewStatus : Check Status
+  }
+  
+  state SalaryView {
+    [*] --> ViewHistory
+    ViewHistory --> ViewDetails : Select Month
+  }
+}
+
+' Employee Status State Diagram
+[*] --> Active : New Hire
+Active --> OnLeave : Request Leave
+OnLeave --> Active : Return from Leave
+Active --> Inactive : Resignation
+Inactive --> [*] : Termination
+
+' Leave Request State Diagram
+[*] --> Draft : Create Request
+Draft --> Pending : Submit
+Pending --> Approved : Admin Approves
+Pending --> Rejected : Admin Rejects
+Approved --> Completed : Leave Taken
+Rejected --> [*] : Cancel
+Completed --> [*] : End Leave
+
+' Attendance State Diagram
+[*] --> Present : Check In
+Present --> OnBreak : Start Break
+OnBreak --> Present : End Break
+Present --> Absent : No Check In
+Absent --> Present : Late Check In
+Present --> [*] : Check Out
+
+' Employee Profile State Diagram
+[*] --> New : Registration
+New --> Active : Verification
+Active --> PendingUpdate : Request Update
+PendingUpdate --> Active : Admin Approves
+PendingUpdate --> Active : Admin Rejects
+Active --> [*] : Deactivation
+
+' Report Generation State Diagram
+[*] --> Draft : Create
+Draft --> Processing : Generate
+Processing --> Ready : Data Collected
+Ready --> Archived : View
+Archived --> [*] : Delete
+
+' Salary Processing States
+[*] --> Pending : Create
+Pending --> Processing : Start Processing
+Processing --> Credited : Payment Done
+Processing --> Failed : Error
+Failed --> Processing : Retry
+Credited --> [*] : Complete
+
+@enduml 

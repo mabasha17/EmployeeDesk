@@ -1,0 +1,125 @@
+:root {
+  --bs-primary: #0d6efd;
+  --bs-primary-dark: #0a58ca;
+  --bs-success: #198754;
+  --bs-success-dark: #146c43;
+  --bs-warning: #ffc107;
+  --bs-warning-dark: #ffca2c;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding: 1rem;
+}
+
+.main-content.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+/* Sidebar Styles */
+.bg-light {
+  background-color: #f8f9fa !important;
+  border-right: 1px solid #dee2e6;
+}
+
+.nav-link {
+  color: #495057;
+  padding: 0.75rem 1rem;
+  border-radius: 0.25rem;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+}
+
+.nav-link:hover {
+  background-color: #e9ecef;
+  color: var(--bs-primary);
+}
+
+.nav-link.active {
+  background-color: var(--bs-primary);
+  color: white;
+}
+
+.nav-link i {
+  font-size: 1.1rem;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Login page specific styles */
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+  padding: 2rem;
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+.btn-primary {
+  padding: 0.75rem;
+  font-weight: 500;
+}
+
+/* Loading spinner */
+.spinner-border {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.2em;
+}

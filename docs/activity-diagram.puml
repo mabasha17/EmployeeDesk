@@ -1,0 +1,60 @@
+@startuml EMS Activity Diagram
+
+' Authentication Flow
+start
+:User accesses system;
+if (User authenticated?) then (no)
+  :Show login form;
+  :User enters credentials;
+  :Validate credentials;
+  if (Valid?) then (no)
+    :Show error message;
+    stop
+  else (yes)
+    :Generate JWT token;
+    :Store token in localStorage;
+  endif
+else (yes)
+endif
+
+' Main System Flow
+partition "Admin Activities" {
+  :Access admin dashboard;
+  fork
+    :Manage employees;
+    :Add/Edit employee details;
+    :Assign departments;
+  fork again
+    :Manage leaves;
+    :Review leave requests;
+    :Approve/Reject leaves;
+  fork again
+    :Manage salaries;
+    :Process salary payments;
+    :Generate reports;
+  end fork
+}
+
+partition "Employee Activities" {
+  :Access employee portal;
+  fork
+    :View profile;
+    :Update personal info;
+  fork again
+    :Apply for leave;
+    :Check leave status;
+  fork again
+    :View attendance;
+    :Mark attendance;
+  fork again
+    :View salary details;
+    :Download payslips;
+  end fork
+}
+
+' Common Activities
+:Logout;
+:Clear session;
+stop
+
+@enduml 
