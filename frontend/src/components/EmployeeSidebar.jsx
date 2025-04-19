@@ -19,7 +19,7 @@ const EmployeeSidebar = () => {
     },
     {
       title: "Leaves",
-      path: "/employee/leaves",
+      path: "/employee/leave",
       icon: <FaCalendarAlt />,
     },
     {

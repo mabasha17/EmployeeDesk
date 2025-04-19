@@ -11,11 +11,15 @@ import {
 } from "react-bootstrap";
 import { FaUsers, FaChartBar, FaUserClock, FaUserCheck } from "react-icons/fa";
 import { api } from "../config";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "./AdminDashboard.css";
 
 const AdminDashboard = () => {
+  const { token, isAdmin, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalEmployees: 0,
     activeEmployees: 0,
@@ -28,10 +32,14 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!isAuthenticated() || !isAdmin()) {
+      navigate("/login");
+      return;
+    }
+
     const fetchDashboardData = async () => {
       try {
         console.log("Starting to fetch dashboard data...");
-        const token = localStorage.getItem("token");
         console.log("Token:", token ? "Present" : "Missing");
 
         if (!token) {
@@ -50,7 +58,7 @@ const AdminDashboard = () => {
         }
 
         // Fetch employees data
-        console.log("Fetching employees from /api/employees...");
+        console.log("Fetching employees from /employees...");
         const employeesResponse = await api.get("/employees");
         console.log("Employees response:", employeesResponse.data);
 
@@ -63,7 +71,7 @@ const AdminDashboard = () => {
           : [];
 
         // Fetch leaves data
-        console.log("Fetching leaves from /api/leaves/recent...");
+        console.log("Fetching leaves from /leaves/recent...");
         const leavesResponse = await api.get("/leaves/recent");
         console.log("Leaves response:", leavesResponse.data);
 
@@ -128,7 +136,7 @@ const AdminDashboard = () => {
     };
 
     fetchDashboardData();
-  }, []);
+  }, [token, isAuthenticated, isAdmin, navigate]);
 
   if (loading) {
     return (

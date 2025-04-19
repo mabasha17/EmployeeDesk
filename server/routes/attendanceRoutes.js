@@ -1,30 +1,25 @@
 import express from "express";
 import {
   getAllAttendance,
-  getAttendanceReports,
-  createBulkAttendance,
   getEmployeeAttendance,
-  checkIn,
-  checkOut,
-  getEmployeeAttendanceHistory,
+  createAttendance,
+  updateAttendance,
+  deleteAttendance,
 } from "../controllers/attendanceController.js";
-import { isAdmin, isEmployee } from "../middleware/authMiddleware.js";
+import { auth, isAdmin } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+// Apply auth middleware to all routes
+router.use(auth);
+
 // Admin routes
-router.get("/admin/attendance", isAdmin, getAllAttendance);
-router.get("/admin/attendance/reports", isAdmin, getAttendanceReports);
-router.post("/admin/attendance/bulk", isAdmin, createBulkAttendance);
+router.get("/", isAdmin, getAllAttendance);
+router.delete("/:id", isAdmin, deleteAttendance);
 
 // Employee routes
-router.get("/employee/attendance", isEmployee, getEmployeeAttendance);
-router.post("/employee/attendance/check-in", isEmployee, checkIn);
-router.post("/employee/attendance/check-out", isEmployee, checkOut);
-router.get(
-  "/employee/attendance/history",
-  isEmployee,
-  getEmployeeAttendanceHistory
-);
+router.get("/employee", getEmployeeAttendance);
+router.post("/", createAttendance);
+router.put("/:id", updateAttendance);
 
 export default router;

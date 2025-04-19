@@ -1,6 +1,6 @@
 import React, { useState } from "react"; // eslint-disable-line no-unused-vars
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/authContext";
+import { useAuth } from "../context/AuthContext";
 import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 
 const Login = () => {
@@ -13,13 +13,17 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      console.log("Attempting login with:", { email });
       const user = await login(email, password);
+      console.log("Login successful, user:", user);
+
       if (user.role === "admin") {
         navigate("/admin/dashboard");
       } else {
         navigate("/employee/dashboard");
       }
     } catch (err) {
+      console.error("Login error:", err);
       setError(err.message || "Failed to login");
     }
   };

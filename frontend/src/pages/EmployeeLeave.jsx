@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react"; // eslint-disable-line no-unused-vars
+import { useEffect, useState } from "react";
 import {
   Container,
   Card,
@@ -7,10 +7,13 @@ import {
   Modal,
   Form,
   Alert,
+  Badge,
 } from "react-bootstrap";
-import axios from "axios";
+import { api } from "../config";
+import { useAuth } from "../context/AuthContext";
 
 const EmployeeLeave = () => {
+  const { token } = useAuth();
   const [leaves, setLeaves] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,17 +27,17 @@ const EmployeeLeave = () => {
 
   useEffect(() => {
     fetchLeaves();
-  }, []);
+  }, [token]);
 
   const fetchLeaves = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/leaves", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      console.log("Fetching employee leaves...");
+      const response = await api.get("/leaves/employee/leaves");
+      console.log("Leaves response:", response.data);
       setLeaves(response.data);
       setLoading(false);
     } catch (err) {
+      console.error("Error fetching leaves:", err);
       setError(err.response?.data?.message || "Failed to fetch leave requests");
       setLoading(false);
     }
@@ -51,13 +54,12 @@ const EmployeeLeave = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
-      await axios.post("http://localhost:5000/api/leaves", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      console.log("Submitting leave request:", formData);
+      await api.post("/leaves/employee/leaves", formData);
       handleCloseModal();
       fetchLeaves();
     } catch (err) {
+      console.error("Error submitting leave request:", err);
       setError(err.response?.data?.message || "Failed to submit leave request");
     }
   };
@@ -103,17 +105,17 @@ const EmployeeLeave = () => {
                   <td>{leave.type}</td>
                   <td>{leave.reason}</td>
                   <td>
-                    <span
-                      className={`badge bg-${
+                    <Badge
+                      bg={
                         leave.status === "approved"
                           ? "success"
                           : leave.status === "pending"
                           ? "warning"
                           : "danger"
-                      }`}
+                      }
                     >
                       {leave.status}
-                    </span>
+                    </Badge>
                   </td>
                 </tr>
               ))}
@@ -138,6 +140,7 @@ const EmployeeLeave = () => {
                 required
               />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>End Date</Form.Label>
               <Form.Control
@@ -148,6 +151,7 @@ const EmployeeLeave = () => {
                 required
               />
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Type</Form.Label>
               <Form.Select
@@ -161,28 +165,22 @@ const EmployeeLeave = () => {
                 <option value="personal">Personal Leave</option>
               </Form.Select>
             </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Reason</Form.Label>
               <Form.Control
                 as="textarea"
+                rows={3}
                 name="reason"
                 value={formData.reason}
                 onChange={handleInputChange}
                 required
               />
             </Form.Group>
-            <div className="d-flex justify-content-end">
-              <Button
-                variant="secondary"
-                onClick={handleCloseModal}
-                className="me-2"
-              >
-                Cancel
-              </Button>
-              <Button variant="primary" type="submit">
-                Submit
-              </Button>
-            </div>
+
+            <Button variant="primary" type="submit" className="w-100">
+              Submit Request
+            </Button>
           </Form>
         </Modal.Body>
       </Modal>

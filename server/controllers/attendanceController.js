@@ -5,9 +5,10 @@ import Employee from "../models/Employee.js";
 export const getAllAttendance = async (req, res) => {
   try {
     const attendance = await Attendance.find().sort({ date: -1 });
-    res.status(200).json(attendance);
+    res.json(attendance);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch attendance records" });
+    console.error("Error getting attendance records:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -62,15 +63,21 @@ export const createBulkAttendance = async (req, res) => {
   }
 };
 
-// Get employee attendance
+// Get attendance by employee
 export const getEmployeeAttendance = async (req, res) => {
   try {
+    const employee = await Employee.findOne({ user: req.user.userId });
+    if (!employee) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
     const attendance = await Attendance.find({
-      employeeId: req.user.employeeId,
+      employeeId: employee.employeeId,
     }).sort({ date: -1 });
-    res.status(200).json(attendance);
+    res.json(attendance);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch employee attendance" });
+    console.error("Error getting employee attendance:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -161,5 +168,68 @@ export const updateAttendanceStatus = async (req, res) => {
     res.status(200).json(attendance);
   } catch (error) {
     res.status(400).json({ error: "Failed to update attendance status" });
+  }
+};
+
+// Create attendance record
+export const createAttendance = async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ user: req.user.userId });
+    if (!employee) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    const { date, checkIn, checkOut, status, notes } = req.body;
+    const attendance = new Attendance({
+      employeeId: employee.employeeId,
+      employeeName: employee.name,
+      date,
+      checkIn,
+      checkOut,
+      status,
+      notes,
+    });
+    await attendance.save();
+    res.status(201).json(attendance);
+  } catch (error) {
+    console.error("Error creating attendance record:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Update attendance record
+export const updateAttendance = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { checkIn, checkOut, status, notes } = req.body;
+
+    const attendance = await Attendance.findByIdAndUpdate(
+      id,
+      { checkIn, checkOut, status, notes, updatedAt: Date.now() },
+      { new: true }
+    );
+
+    if (!attendance) {
+      return res.status(404).json({ error: "Attendance record not found" });
+    }
+
+    res.json(attendance);
+  } catch (error) {
+    console.error("Error updating attendance record:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Delete attendance record
+export const deleteAttendance = async (req, res) => {
+  try {
+    const attendance = await Attendance.findByIdAndDelete(req.params.id);
+    if (!attendance) {
+      return res.status(404).json({ error: "Attendance record not found" });
+    }
+    res.json({ message: "Attendance record deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting attendance record:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
