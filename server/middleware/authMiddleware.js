@@ -35,13 +35,15 @@ export const auth = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET);
     console.log("Token decoded successfully:", {
-      userId: decoded.userId,
+      _id: decoded._id,
       role: decoded.role,
       email: decoded.email,
     });
 
-    // Find user
-    const user = await User.findById(decoded.userId).select("-password");
+    // Find user - Use _id consistently from token
+    const userId = decoded._id || decoded.userId; // Fallback for backward compatibility
+    const user = await User.findById(userId).select("-password");
+
     if (!user) {
       console.log("User not found for token");
       return res.status(401).json({
@@ -50,10 +52,16 @@ export const auth = async (req, res, next) => {
       });
     }
 
-    // Attach user to request
-    req.user = user;
+    // Attach user to request with proper MongoDB _id
+    req.user = {
+      _id: user._id,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+    };
+
     console.log("User attached to request:", {
-      id: user._id,
+      _id: user._id,
       email: user.email,
       role: user.role,
     });

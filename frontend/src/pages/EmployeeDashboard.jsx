@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react"; // eslint-disable-line no-unused-vars
 import { Container, Row, Col, Card, Alert } from "react-bootstrap";
-import { Link } from "react-router-dom";
 import {
   FaCalendarAlt,
   FaMoneyBillWave,
@@ -28,17 +27,28 @@ const EmployeeDashboard = () => {
 
   const fetchEmployeeData = async () => {
     try {
-      const response = await api.get("/employee/profile");
-      setEmployeeData(response.data);
+      const response = await api.get("/employees/profile");
+      console.log("Employee profile data:", response.data);
+
+      // Make sure we have valid data or set defaults
+      const employeeData = {
+        name: response.data.name || "Employee",
+        department: response.data.department || "Not assigned",
+        position: response.data.position || "Not assigned",
+        leaves: response.data.leaves || 0,
+        salary: response.data.salary || 0,
+      };
+
+      setEmployeeData(employeeData);
       setLoading(false);
     } catch (err) {
+      console.error("Error fetching employee data:", err);
+
       if (err.response?.status === 401) {
         localStorage.removeItem("token");
         navigate("/login");
       } else {
-        setError(
-          err.response?.data?.message || "Failed to fetch employee data"
-        );
+        setError(err.response?.data?.error || "Failed to fetch employee data");
       }
       setLoading(false);
     }
@@ -116,25 +126,6 @@ const EmployeeDashboard = () => {
                   <h6 className="mb-0">Monthly Salary</h6>
                   <p className="mb-0">${employeeData.salary.toFixed(2)}</p>
                 </div>
-              </div>
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-      <Row>
-        <Col md={6}>
-          <Card className="mb-4">
-            <Card.Header>
-              <h5 className="mb-0">Quick Links</h5>
-            </Card.Header>
-            <Card.Body>
-              <div className="d-grid gap-2">
-                <Link to="/employee/leaves" className="btn btn-outline-primary">
-                  Apply for Leave
-                </Link>
-                <Link to="/employee/salary" className="btn btn-outline-primary">
-                  View Salary
-                </Link>
               </div>
             </Card.Body>
           </Card>

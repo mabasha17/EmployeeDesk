@@ -11,7 +11,7 @@ import {
 } from "react-bootstrap";
 import { FaUsers, FaChartBar, FaUserClock, FaUserCheck } from "react-icons/fa";
 import { api } from "../config";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
@@ -29,6 +29,7 @@ const AdminDashboard = () => {
   const [recentLeaves, setRecentLeaves] = useState([]);
   const [recentEmployees, setRecentEmployees] = useState([]);
   const [error, setError] = useState(null);
+  const [errorDetails, setErrorDetails] = useState({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -57,79 +58,122 @@ const AdminDashboard = () => {
           );
         }
 
-        // Fetch employees data
-        console.log("Fetching employees from /employees...");
-        const employeesResponse = await api.get("/employees");
-        console.log("Employees response:", employeesResponse.data);
+        // Create a mock stats object for testing
+        let tempStats = {
+          totalEmployees: 0,
+          activeEmployees: 0,
+          pendingLeaves: 0,
+          totalDepartments: 0,
+        };
 
-        if (!employeesResponse.data) {
-          throw new Error("No employee data received from server");
+        // Fetch admin dashboard data
+        try {
+          console.log("Fetching admin dashboard data...");
+          const statsResponse = await api.get("/admin/stats");
+          console.log("Stats response:", statsResponse.data);
+
+          if (statsResponse.data && statsResponse.data.data) {
+            tempStats = statsResponse.data.data;
+          } else {
+            console.warn(
+              "Stats data format is not as expected:",
+              statsResponse.data
+            );
+          }
+        } catch (statsError) {
+          console.error("Error fetching stats:", statsError);
+          setErrorDetails((prev) => ({ ...prev, stats: statsError.message }));
+          // Continue with other requests instead of throwing
         }
 
-        const employees = Array.isArray(employeesResponse.data)
-          ? employeesResponse.data
-          : [];
+        // Set stats regardless, using what we have
+        setStats(tempStats);
 
-        // Fetch leaves data
-        console.log("Fetching leaves from /leaves/recent...");
-        const leavesResponse = await api.get("/leaves/recent");
-        console.log("Leaves response:", leavesResponse.data);
+        // Initialize arrays for data that might not be fetched successfully
+        let tempRecentEmployees = [];
+        let tempRecentLeaves = [];
 
-        if (!leavesResponse.data) {
-          throw new Error("No leave data received from server");
+        // Fetch recent employees
+        try {
+          console.log("Fetching recent employees...");
+          const recentEmployeesResponse = await api.get(
+            "/admin/employees/recent"
+          );
+          console.log(
+            "Recent employees response:",
+            recentEmployeesResponse.data
+          );
+
+          if (
+            recentEmployeesResponse.data &&
+            recentEmployeesResponse.data.data
+          ) {
+            tempRecentEmployees = recentEmployeesResponse.data.data;
+          } else {
+            console.warn(
+              "Employee data format is not as expected:",
+              recentEmployeesResponse.data
+            );
+          }
+        } catch (employeesError) {
+          console.error("Error fetching employees:", employeesError);
+          setErrorDetails((prev) => ({
+            ...prev,
+            employees: employeesError.message,
+          }));
+          // Continue with other requests
         }
 
-        const leaves = Array.isArray(leavesResponse.data)
-          ? leavesResponse.data
-          : [];
+        // Fetch recent leaves
+        try {
+          console.log("Fetching recent leaves...");
+          const recentLeavesResponse = await api.get("/admin/leaves/recent");
+          console.log("Recent leaves response:", recentLeavesResponse.data);
 
-        // Calculate stats
-        const totalEmployees = employees.length;
-        const activeEmployees = employees.filter(
-          (emp) => emp.status === "active"
-        ).length;
-        const pendingLeaves = leaves.filter(
-          (leave) => leave.status === "pending"
-        ).length;
+          if (recentLeavesResponse.data && recentLeavesResponse.data.data) {
+            tempRecentLeaves = recentLeavesResponse.data.data;
+          } else {
+            console.warn(
+              "Leaves data format is not as expected:",
+              recentLeavesResponse.data
+            );
+          }
+        } catch (leavesError) {
+          console.error("Error fetching leaves:", leavesError);
+          setErrorDetails((prev) => ({ ...prev, leaves: leavesError.message }));
+          // Continue with rendering what we have
+        }
 
-        console.log("Calculated stats:", {
-          totalEmployees,
-          activeEmployees,
-          pendingLeaves,
-          totalDepartments: new Set(employees.map((emp) => emp.department))
-            .size,
-        });
+        // Set the data we've collected
+        setRecentEmployees(tempRecentEmployees);
+        setRecentLeaves(tempRecentLeaves);
 
-        setStats({
-          totalEmployees,
-          activeEmployees,
-          pendingLeaves,
-          totalDepartments: new Set(employees.map((emp) => emp.department))
-            .size,
-        });
-
-        // Get recent employees (last 5)
-        const recentEmps = employees.slice(-5).reverse();
-        console.log("Recent employees:", recentEmps);
-        setRecentEmployees(recentEmps);
-
-        // Get recent leaves (last 5)
-        const recentLevs = leaves.slice(-5).reverse();
-        console.log("Recent leaves:", recentLevs);
-        setRecentLeaves(recentLevs);
-
+        // If we have all our data, clear any existing error
         setError(null);
       } catch (err) {
+        console.error("Dashboard error:", err);
         console.error("Detailed error:", {
           message: err.message,
           response: err.response?.data,
           status: err.response?.status,
           stack: err.stack,
         });
+
         setError(
-          err.message ||
+          err.response?.data?.message ||
+            err.message ||
             "Failed to load dashboard data. Please try again later."
         );
+
+        // Still set default empty data
+        setStats({
+          totalEmployees: 0,
+          activeEmployees: 0,
+          pendingLeaves: 0,
+          totalDepartments: 0,
+        });
+        setRecentEmployees([]);
+        setRecentLeaves([]);
       } finally {
         setLoading(false);
       }
@@ -150,20 +194,30 @@ const AdminDashboard = () => {
     );
   }
 
-  if (error) {
-    return (
-      <Container className="mt-5">
-        <Alert variant="danger">
-          <h4>Error Loading Dashboard</h4>
-          <p>{error}</p>
-          <p className="mb-0">Please check your connection and try again.</p>
-        </Alert>
-      </Container>
-    );
-  }
-
   return (
     <Container className="mt-4">
+      {error && (
+        <Alert variant="danger" className="mb-4">
+          <h4>Error Loading Dashboard</h4>
+          <p>{error}</p>
+          {Object.keys(errorDetails).length > 0 && (
+            <div>
+              <p>Error Details:</p>
+              <ul>
+                {errorDetails.stats && <li>Stats: {errorDetails.stats}</li>}
+                {errorDetails.employees && (
+                  <li>Employees: {errorDetails.employees}</li>
+                )}
+                {errorDetails.leaves && <li>Leaves: {errorDetails.leaves}</li>}
+              </ul>
+            </div>
+          )}
+          <p className="mb-0">
+            Showing available data. Some information may be missing.
+          </p>
+        </Alert>
+      )}
+
       <h2 className="mb-4">Admin Dashboard</h2>
 
       {/* Stats Cards */}

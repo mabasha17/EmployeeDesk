@@ -70,8 +70,19 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Invalid user data received");
       }
 
-      console.log("User profile fetched successfully:", response.data.user);
-      setUser(response.data.user);
+      // Ensure we have a consistent user object with _id
+      const userData = response.data.user;
+
+      // Normalize user object to ensure _id is used consistently
+      const normalizedUser = {
+        _id: userData._id || userData.id, // Prefer _id but fallback to id
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+      };
+
+      console.log("User profile fetched successfully:", normalizedUser);
+      setUser(normalizedUser);
       setError(null);
     } catch (err) {
       console.error("Error fetching user profile:", err);
@@ -93,24 +104,108 @@ export const AuthProvider = ({ children }) => {
       setError(null);
 
       console.log("Attempting login...");
-      const response = await axios.post(`${API_URL}/auth/login`, {
-        email,
-        password,
-      });
 
-      if (!response.data || !response.data.token || !response.data.user) {
-        throw new Error("Invalid login response");
+      // Clear any existing token first
+      localStorage.removeItem("token");
+
+      // Create a dedicated axios instance for login to avoid interceptor issues
+      const loginResponse = await axios.post(
+        `${API_URL}/auth/login`,
+        {
+          email,
+          password,
+        },
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true,
+        }
+      );
+
+      console.log("Login API response:", loginResponse);
+
+      if (!loginResponse.data || !loginResponse.data.token) {
+        throw new Error("Invalid login response - no token received");
       }
 
-      console.log("Login successful:", response.data.user);
-      localStorage.setItem("token", response.data.token);
-      setUser(response.data.user);
+      // Store the token immediately
+      const token = loginResponse.data.token;
+      localStorage.setItem("token", token);
+
+      console.log("Token stored in localStorage");
+
+      // Set the user from the response if available
+      if (loginResponse.data.user) {
+        // Normalize user object to ensure _id is used consistently
+        const userData = loginResponse.data.user;
+        const normalizedUser = {
+          _id: userData._id || userData.id, // Prefer _id but fallback to id
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+        };
+
+        console.log("Login successful. User data:", normalizedUser);
+        setUser(normalizedUser);
+        return normalizedUser;
+      }
+
+      // If no user in response, fetch profile with the new token
+      console.log("Fetching user profile after login...");
+      const profileResponse = await axios.get(`${API_URL}/auth/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!profileResponse.data || !profileResponse.data.user) {
+        throw new Error("Failed to get user profile after login");
+      }
+
+      // Normalize user object to ensure _id is used consistently
+      const profileData = profileResponse.data.user;
+      const normalizedProfile = {
+        _id: profileData._id || profileData.id, // Prefer _id but fallback to id
+        name: profileData.name,
+        email: profileData.email,
+        role: profileData.role,
+      };
+
+      console.log("Profile fetched successfully:", normalizedProfile);
+      setUser(normalizedProfile);
       setError(null);
-      return response.data.user;
+      return normalizedProfile;
     } catch (err) {
-      console.error("Login error:", err);
-      setError(err.response?.data?.message || err.message || "Login failed");
-      throw err;
+      console.error("Login error details:", err);
+
+      // Clear token on login failure
+      localStorage.removeItem("token");
+
+      // Provide more specific error messages
+      if (err.response) {
+        if (err.response.status === 401) {
+          setError("Invalid email or password");
+        } else if (err.response.status === 500) {
+          setError("Server error. Please try again later.");
+        } else {
+          setError(err.response.data?.message || "Login failed");
+        }
+      } else if (
+        err.code === "ECONNABORTED" ||
+        err.message.includes("timeout")
+      ) {
+        setError("Connection timeout. Please check your internet connection.");
+      } else if (err.code === "ECONNREFUSED") {
+        setError(
+          "Cannot connect to server. Please make sure the server is running."
+        );
+      } else {
+        setError(err.message || "Login failed");
+      }
+
+      throw new Error(
+        err.response?.data?.message || err.message || "Login failed"
+      );
     } finally {
       setLoading(false);
     }

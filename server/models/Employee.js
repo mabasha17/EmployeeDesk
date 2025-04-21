@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Counter from "./Counter.js";
 
 const employeeSchema = new mongoose.Schema(
   {
@@ -55,17 +56,26 @@ const employeeSchema = new mongoose.Schema(
   }
 );
 
-// Pre-save hook to generate employeeId
+// Pre-save hook to generate sequential employeeId
 employeeSchema.pre("save", async function (next) {
   if (!this.employeeId) {
-    // Generate a unique employee ID (e.g., EMP-YYYYMMDD-XXXX)
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    const random = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+    try {
+      // Get sequential counter value
+      const seq = await Counter.getNextSequence("employeeId");
 
-    this.employeeId = `EMP-${year}${month}${day}-${random}`;
+      // Format employee ID with padding (e.g., EMP00001)
+      this.employeeId = `EMP${String(seq).padStart(5, "0")}`;
+      console.log(`Generated sequential employee ID: ${this.employeeId}`);
+    } catch (error) {
+      console.error("Error generating employee ID:", error);
+      // Fallback to date-based ID if counter fails
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const random = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+      this.employeeId = `EMP-${year}${month}${day}-${random}`;
+    }
   }
   next();
 });

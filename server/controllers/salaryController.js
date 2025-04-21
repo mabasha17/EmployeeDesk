@@ -20,7 +20,12 @@ export const createSalary = async (req, res) => {
       deductions,
     });
     await salary.save();
-    res.status(201).json(salary);
+    // Fetch the saved salary with populated employee data
+    const savedSalary = await Salary.findById(salary._id).populate(
+      "employee",
+      "name email"
+    );
+    res.status(201).json(savedSalary);
   } catch (error) {
     console.error("Error creating salary:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -31,15 +36,18 @@ export const updateSalary = async (req, res) => {
   try {
     const { id } = req.params;
     const { basicSalary, allowances, deductions } = req.body;
-    const salary = await Salary.findByIdAndUpdate(
+
+    const updatedSalary = await Salary.findByIdAndUpdate(
       id,
       { basicSalary, allowances, deductions },
       { new: true }
-    );
-    if (!salary) {
+    ).populate("employee", "name email");
+
+    if (!updatedSalary) {
       return res.status(404).json({ error: "Salary not found" });
     }
-    res.json(salary);
+
+    res.json(updatedSalary);
   } catch (error) {
     console.error("Error updating salary:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -83,6 +91,26 @@ export const getEmployeeSalaryHistory = async (req, res) => {
     res.json(salaries);
   } catch (error) {
     console.error("Error getting employee salary history:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const deleteSalary = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const deletedSalary = await Salary.findByIdAndDelete(id).populate(
+      "employee",
+      "name email"
+    );
+
+    if (!deletedSalary) {
+      return res.status(404).json({ error: "Salary not found" });
+    }
+
+    res.json(deletedSalary);
+  } catch (error) {
+    console.error("Error deleting salary:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };

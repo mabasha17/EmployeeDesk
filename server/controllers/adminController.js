@@ -5,18 +5,30 @@ import Attendance from "../models/Attendance.js";
 import Salary from "../models/Salary.js";
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import mongoose from "mongoose";
 
 export const getAdminStats = async (req, res) => {
   try {
     console.log("Fetching admin stats for user:", req.user._id);
 
-    const [totalEmployees, activeEmployees, pendingLeaves, totalDepartments] =
-      await Promise.all([
-        Employee.countDocuments(),
-        Employee.countDocuments({ status: "active" }),
-        Leave.countDocuments({ status: "pending" }),
-        Department.countDocuments(),
-      ]);
+    let totalDepartments = 0;
+    try {
+      // Check if Department model exists and is accessible
+      if (mongoose.models.Department) {
+        totalDepartments = await Department.countDocuments();
+      } else {
+        console.warn("Department model not found or not accessible");
+      }
+    } catch (deptError) {
+      console.error("Error fetching department stats:", deptError);
+      // Continue with other stats
+    }
+
+    const [totalEmployees, activeEmployees, pendingLeaves] = await Promise.all([
+      Employee.countDocuments(),
+      Employee.countDocuments({ status: "active" }),
+      Leave.countDocuments({ status: "pending" }),
+    ]);
 
     console.log("Admin stats fetched successfully:", {
       totalEmployees,
@@ -46,12 +58,24 @@ export const getAdminStats = async (req, res) => {
 
 export const getRecentLeaves = async (req, res) => {
   try {
-    const recentLeaves = await Leave.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate("employee", "name email");
+    console.log("Fetching recent leaves");
+
+    let recentLeaves = [];
+    try {
+      recentLeaves = await Leave.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate("employee", "name email");
+      console.log(`Found ${recentLeaves.length} recent leaves`);
+    } catch (error) {
+      console.error("Error in leave query:", error);
+      // Return empty array instead of failing
+      recentLeaves = [];
+    }
+
     res.json({ success: true, data: recentLeaves });
   } catch (error) {
+    console.error("Error getting recent leaves:", error);
     res.status(500).json({
       success: false,
       error: "Internal server error",
@@ -62,11 +86,21 @@ export const getRecentLeaves = async (req, res) => {
 
 export const getRecentEmployees = async (req, res) => {
   try {
-    const recentEmployees = await Employee.find()
-      .sort({ createdAt: -1 })
-      .limit(5);
+    console.log("Fetching recent employees");
+
+    let recentEmployees = [];
+    try {
+      recentEmployees = await Employee.find().sort({ createdAt: -1 }).limit(5);
+      console.log(`Found ${recentEmployees.length} recent employees`);
+    } catch (error) {
+      console.error("Error in employee query:", error);
+      // Return empty array instead of failing
+      recentEmployees = [];
+    }
+
     res.json({ success: true, data: recentEmployees });
   } catch (error) {
+    console.error("Error getting recent employees:", error);
     res.status(500).json({
       success: false,
       error: "Internal server error",

@@ -75,43 +75,118 @@
 
 .stat-card {
   border: none;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease-in-out;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  margin-bottom: 20px;
+  overflow: hidden;
 }
 
 .stat-card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card .card-body {
+  padding: 1.5rem;
+  position: relative;
 }
 
 .stat-icon {
-  font-size: 2rem;
-  color: #6c757d;
+  color: #4e73df;
+  font-size: 2.5rem;
+  opacity: 0.8;
+}
+
+.stat-card:nth-child(1) .stat-icon {
+  color: #4e73df; /* Blue */
+}
+
+.stat-card:nth-child(2) .stat-icon {
+  color: #1cc88a; /* Green */
+}
+
+.stat-card:nth-child(3) .stat-icon {
+  color: #f6c23e; /* Yellow */
+}
+
+.stat-card:nth-child(4) .stat-icon {
+  color: #e74a3b; /* Red */
 }
 
 .card {
+  border-radius: 8px;
   border: none;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
 }
 
 .card-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-  border-radius: 10px 10px 0 0 !important;
+  background-color: #f8f9fc;
+  border-bottom: 1px solid #eaecf4;
+  padding: 1rem 1.5rem;
+}
+
+.card-header h5 {
+  color: #5a5c69;
+  font-weight: 600;
+}
+
+.table {
+  margin-bottom: 0;
 }
 
 .table th {
   border-top: none;
+  color: #858796;
   font-weight: 600;
-  color: #6c757d;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
 }
 
 .table td {
   vertical-align: middle;
+  color: #6e707e;
 }
 
 .badge {
-  padding: 0.5em 0.75em;
+  padding: 6px 10px;
   font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+.alert {
+  border-radius: 8px;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .stat-card {
+    margin-bottom: 15px;
+  }
+
+  .stat-icon {
+    font-size: 2rem;
+  }
+}
+
+/* Animation for loading spinner */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.spinner-border {
+  animation: pulse 1.5s infinite ease-in-out,
+    spinner-border 0.75s linear infinite;
 }

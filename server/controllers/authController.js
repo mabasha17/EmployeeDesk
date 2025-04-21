@@ -29,10 +29,10 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    // Generate JWT token
+    // Generate JWT token - Use _id consistently
     const token = jwt.sign(
       {
-        userId: user._id,
+        _id: user._id, // Changed from userId to _id for consistency
         role: user.role,
         email: user.email,
       },
@@ -42,12 +42,12 @@ export const login = async (req, res) => {
 
     console.log("Login successful for user:", user.email);
 
-    // Return user data and token
+    // Return user data and token - Use _id consistently
     res.json({
       success: true,
       token,
       user: {
-        id: user._id,
+        _id: user._id, // Use MongoDB's _id consistently
         email: user.email,
         role: user.role,
         name: user.name,
@@ -66,14 +66,20 @@ export const login = async (req, res) => {
 
 export const verifyToken = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select("-password");
+    // Using _id instead of userId for consistency
+    const user = await User.findById(req.user._id).select("-password");
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
     res.json({
       success: true,
-      user,
+      user: {
+        _id: user._id, // Return consistently named fields
+        email: user.email,
+        role: user.role,
+        name: user.name,
+      },
     });
   } catch (error) {
     console.error("Token verification error:", error);
@@ -88,7 +94,8 @@ export const verifyToken = async (req, res) => {
 
 export const getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select("-password");
+    // Using _id instead of userId for consistency
+    const user = await User.findById(req.user._id).select("-password");
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -96,7 +103,7 @@ export const getProfile = async (req, res) => {
     res.json({
       success: true,
       user: {
-        id: user._id,
+        _id: user._id, // Return consistently named fields
         email: user.email,
         role: user.role,
         name: user.name,

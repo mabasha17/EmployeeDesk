@@ -21,4 +21,12 @@ router.get("/employee/leaves", auth, isEmployee, getEmployeeLeaves);
 router.post("/employee/leaves", auth, isEmployee, createLeave);
 router.get("/employee/leaves/:id", auth, isEmployee, getLeaveById);
 
+// Alternative more flexible routes (without role check)
+router.post("/leaves", auth, createLeave); // Alternative route for creating leaves
+router.get("/leaves", auth, getEmployeeLeaves); // Get current user's leaves
+
+// Direct routes - simpler paths
+router.post("/", auth, createLeave); // Simple route for creating leaves
+router.get("/", auth, getEmployeeLeaves); // Simple route for getting leaves
+
 export default router;

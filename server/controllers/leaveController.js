@@ -16,7 +16,7 @@ export const getAllLeaves = async (req, res) => {
 // Get leave requests by employee
 export const getEmployeeLeaves = async (req, res) => {
   try {
-    const leaves = await Leave.find({ employee: req.user.userId })
+    const leaves = await Leave.find({ employee: req.user._id })
       .populate("employee", "name email")
       .sort({ createdAt: -1 });
     res.json(leaves);
@@ -30,19 +30,44 @@ export const getEmployeeLeaves = async (req, res) => {
 export const createLeave = async (req, res) => {
   try {
     const { startDate, endDate, reason, type } = req.body;
-    const leave = new Leave({
-      employee: req.user.userId,
+
+    // Access _id consistently across the application
+    const userId = req.user._id;
+
+    console.log("Creating leave request:", {
+      userId,
       startDate,
       endDate,
       reason,
       type,
+      user: req.user, // Log full user object for debugging
+    });
+
+    // Validate leave type to match enum values in model
+    const validTypes = ["sick", "vacation", "personal", "annual", "other"];
+    const leaveType = validTypes.includes(type) ? type : "other";
+
+    // Create leave object
+    const leave = new Leave({
+      employee: userId, // Consistently using _id
+      startDate,
+      endDate,
+      reason,
+      type: leaveType,
       status: "pending",
     });
-    await leave.save();
-    res.status(201).json(leave);
+
+    // Save the leave request
+    const savedLeave = await leave.save();
+    console.log("Leave saved successfully:", savedLeave);
+
+    res.status(201).json(savedLeave);
   } catch (error) {
     console.error("Error creating leave:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({
+      error: "Failed to create leave request",
+      message: error.message,
+    });
   }
 };
 

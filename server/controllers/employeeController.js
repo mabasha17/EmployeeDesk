@@ -214,10 +214,28 @@ export const deleteEmployee = async (req, res) => {
 
 export const getEmployeeProfile = async (req, res) => {
   try {
-    const employee = await Employee.findOne({ user: req.user.userId });
+    console.log("getEmployeeProfile called");
+    console.log("User in request:", req.user);
+
+    let employee;
+
+    // If an ID is provided in params, use that
+    if (req.params.id) {
+      console.log("Finding employee by ID:", req.params.id);
+      employee = await Employee.findById(req.params.id);
+    } else {
+      // Otherwise, get the profile of the currently logged in user
+      console.log("Finding employee by user ID:", req.user._id);
+      employee = await Employee.findOne({ user: req.user._id });
+      console.log("Employee found:", employee ? "Yes" : "No");
+    }
+
     if (!employee) {
+      console.log("Employee profile not found");
       return res.status(404).json({ error: "Employee profile not found" });
     }
+
+    console.log("Returning employee profile");
     res.json(employee);
   } catch (error) {
     console.error("Error getting employee profile:", error);
@@ -228,7 +246,7 @@ export const getEmployeeProfile = async (req, res) => {
 export const updateEmployeeProfile = async (req, res) => {
   try {
     const employee = await Employee.findOneAndUpdate(
-      { user: req.user.userId },
+      { user: req.user._id },
       req.body,
       { new: true }
     );
@@ -244,17 +262,15 @@ export const updateEmployeeProfile = async (req, res) => {
 
 export const getEmployeeDashboard = async (req, res) => {
   try {
-    const employee = await Employee.findOne({ user: req.user.userId });
+    const employee = await Employee.findOne({ user: req.user._id });
     if (!employee) {
       return res.status(404).json({ error: "Employee profile not found" });
     }
 
-    // Get recent leaves
     const leaves = await Leave.find({ employee: employee._id })
       .sort({ createdAt: -1 })
       .limit(5);
 
-    // Get salary information
     const salary = await Salary.findOne({ employee: employee._id }).sort({
       createdAt: -1,
     });

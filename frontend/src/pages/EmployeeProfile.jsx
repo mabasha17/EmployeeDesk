@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Container,
   Card,
@@ -14,52 +14,55 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 
 function EmployeeProfile() {
-  const { id } = useParams();
   const [employee, setEmployee] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const fetchEmployee = useCallback(async () => {
-    try {
-      const response = await api.get(`/employees/${id}`);
-      setEmployee(response.data);
-      setLoading(false);
-    } catch (error) {
-      setError(error.response?.data?.error || "Failed to fetch employee data");
-      setLoading(false);
-    }
-  }, [id]);
-
   useEffect(() => {
-    fetchEmployee();
-  }, [fetchEmployee]);
+    const fetchEmployeeProfile = async () => {
+      try {
+        const response = await api.get("/employees/profile");
+        setEmployee(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+        setError(
+          error.response?.data?.error || "Failed to fetch employee profile"
+        );
+        setLoading(false);
+      }
+    };
+
+    fetchEmployeeProfile();
+  }, []);
 
   if (loading) return <div>Loading...</div>;
   if (error) return <Alert variant="danger">{error}</Alert>;
-  if (!employee) return <Alert variant="warning">Employee not found</Alert>;
+  if (!employee)
+    return <Alert variant="warning">Employee profile not found</Alert>;
 
   return (
     <Container className="py-4">
       <Card className="shadow-sm border-0">
         <Card.Body>
           <div className="d-flex justify-content-between align-items-center mb-4">
-            <h2 className="mb-0">Employee Profile</h2>
+            <h2 className="mb-0">My Profile</h2>
             <div>
               <Button
                 variant="outline-warning"
                 size="sm"
                 className="me-2"
-                onClick={() => navigate(`/edit-employee/${id}`)}
+                onClick={() => navigate(`/employee/edit-profile`)}
               >
                 <i className="bi bi-pencil me-2"></i>Edit Profile
               </Button>
               <Button
                 variant="outline-secondary"
                 size="sm"
-                onClick={() => navigate("/employees")}
+                onClick={() => navigate("/employee/dashboard")}
               >
-                <i className="bi bi-arrow-left me-2"></i>Back to List
+                <i className="bi bi-arrow-left me-2"></i>Back to Dashboard
               </Button>
             </div>
           </div>
