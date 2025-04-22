@@ -13,6 +13,7 @@ import {
 } from "react-bootstrap";
 import { FaSearch, FaFilter, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import axios from "axios";
+import { API_URL } from "../config";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./AdminSalaries.css";
 
@@ -37,13 +38,26 @@ const AdminSalaries = () => {
   const fetchSalaries = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get("http://localhost:5000/api/salaries", {
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await axios.get(`${API_URL}/salaries/admin/salaries`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setSalaries(response.data.data);
+
+      // Safely handle the response data
+      const responseData = response.data;
+      const salariesData = Array.isArray(responseData)
+        ? responseData
+        : responseData.data || [];
+
+      setSalaries(salariesData);
       setLoading(false);
     } catch (error) {
-      setError("Failed to fetch salaries");
+      console.error("Error fetching salaries:", error);
+      setError(error.message || "Failed to fetch salaries");
+      setSalaries([]); // Ensure salaries is an empty array on error
       setLoading(false);
     }
   };
@@ -52,24 +66,35 @@ const AdminSalaries = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      await axios.post("http://localhost:5000/api/salaries", newSalary, {
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      await axios.post(`${API_URL}/salaries/admin/salaries`, newSalary, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setShowAddModal(false);
       fetchSalaries();
     } catch (error) {
-      setError("Failed to add salary");
+      console.error("Error adding salary:", error);
+      setError(error.message || "Failed to add salary");
     }
   };
 
-  const filteredSalaries = salaries.filter((salary) => {
-    const matchesSearch = salary.employee.name
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      filterStatus === "all" || salary.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  // Make sure salaries is always an array before filtering
+  const filteredSalaries =
+    salaries && Array.isArray(salaries)
+      ? salaries.filter((salary) => {
+          if (!salary || !salary.employee || !salary.employee.name)
+            return false;
+          const matchesSearch = salary.employee.name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase());
+          const matchesStatus =
+            filterStatus === "all" || salary.status === filterStatus;
+          return matchesSearch && matchesStatus;
+        })
+      : [];
 
   if (loading) {
     return (

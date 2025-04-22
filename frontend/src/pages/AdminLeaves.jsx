@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"; // eslint-disable-line no-unused-vars
 import { Container, Card, Table, Button, Alert } from "react-bootstrap";
 import axios from "axios";
+import { API_URL } from "../config";
 
 const AdminLeaves = () => {
   const [leaves, setLeaves] = useState([]);
@@ -14,12 +15,9 @@ const AdminLeaves = () => {
   const fetchLeaves = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        "http://localhost:5000/api/admin/leaves",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await axios.get(`${API_URL}/leaves/admin/leaves`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setLeaves(response.data);
       setLoading(false);
     } catch (err) {
@@ -33,7 +31,7 @@ const AdminLeaves = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/admin/leaves/${id}/status`,
+        `${API_URL}/leaves/admin/leaves/${id}/status`,
         { status },
         {
           headers: { Authorization: `Bearer ${token}` },

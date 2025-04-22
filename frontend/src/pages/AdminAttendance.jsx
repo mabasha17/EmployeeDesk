@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authContext";
 import { fetchAttendance, deleteAttendance } from "../utils/api";
 import { FaTrash, FaSearch } from "react-icons/fa";
 
 const AdminAttendance = () => {
-  const { token } = useAuth();
+  const { isAuthenticated, isAdmin } = useAuth();
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,32 +13,44 @@ const AdminAttendance = () => {
   useEffect(() => {
     const loadAttendance = async () => {
       try {
-        const data = await fetchAttendance(token);
+        if (!isAuthenticated() || !isAdmin()) {
+          setError("Authentication required");
+          setLoading(false);
+          return;
+        }
+
+        const data = await fetchAttendance();
         setAttendance(data);
         setLoading(false);
       } catch (err) {
+        console.error("Error loading attendance:", err);
         setError("Failed to load attendance records");
         setLoading(false);
       }
     };
 
     loadAttendance();
-  }, [token]);
+  }, [isAuthenticated, isAdmin]);
 
   const handleDelete = async (id) => {
     try {
-      await deleteAttendance(id, token);
+      await deleteAttendance(id);
       setAttendance(attendance.filter((record) => record._id !== id));
     } catch (err) {
+      console.error("Error deleting attendance:", err);
       setError("Failed to delete attendance record");
     }
   };
 
-  const filteredAttendance = attendance.filter(
-    (record) =>
-      record.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.date.includes(searchTerm)
-  );
+  const filteredAttendance = Array.isArray(attendance)
+    ? attendance.filter(
+        (record) =>
+          record.employeeName
+            ?.toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          record.date?.includes(searchTerm)
+      )
+    : [];
 
   if (loading) return <div className="text-center">Loading...</div>;
   if (error) return <div className="text-red-500">{error}</div>;

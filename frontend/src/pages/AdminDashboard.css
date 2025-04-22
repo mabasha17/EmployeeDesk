@@ -190,3 +190,187 @@
   animation: pulse 1.5s infinite ease-in-out,
     spinner-border 0.75s linear infinite;
 }
+
+.dashboard-container {
+  background-color: #f8f9fd;
+  min-height: 100vh;
+}
+
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.section-title {
+  color: #344767;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-bottom: 0.5rem;
+}
+
+.section-title:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 50px;
+  height: 3px;
+  background-color: #4e73df;
+  border-radius: 2px;
+}
+
+/* Stat Cards */
+.stat-card {
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  background-color: #fff;
+  height: 100%;
+}
+
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #344767;
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #67748e;
+}
+
+.icon-container {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-container-sm {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon {
+  font-size: 1.8rem;
+}
+
+/* Background Colors */
+.bg-primary-light {
+  background-color: rgba(78, 115, 223, 0.15);
+}
+
+.bg-success-light {
+  background-color: rgba(28, 200, 138, 0.15);
+}
+
+.bg-warning-light {
+  background-color: rgba(246, 194, 62, 0.15);
+}
+
+.bg-info-light {
+  background-color: rgba(54, 185, 204, 0.15);
+}
+
+.bg-danger-light {
+  background-color: rgba(231, 74, 59, 0.15);
+}
+
+/* Hover Effects */
+.hover-effect {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.hover-effect:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Action Cards */
+.action-card {
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.action-card:hover {
+  background-color: #f8f9fa;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Feature List */
+.feature-list {
+  padding-left: 1.5rem;
+}
+
+.feature-list li {
+  margin-bottom: 0.5rem;
+  position: relative;
+}
+
+.feature-list li::before {
+  content: "✓";
+  position: absolute;
+  left: -1.5rem;
+  color: #4e73df;
+  font-weight: bold;
+}
+
+/* Getting Started Section */
+.getting-started {
+  padding: 1rem;
+  background-color: #f8f9fd;
+  border-radius: 8px;
+}
+
+/* Loading Spinner */
+.dashboard-loading {
+  background-color: #f8f9fd;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .stat-value {
+    font-size: 2rem;
+  }
+
+  .icon-container {
+    width: 56px;
+    height: 56px;
+  }
+
+  .stat-icon {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-container {
+    padding: 1rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .stat-value {
+    font-size: 1.75rem;
+  }
+
+  .icon-container {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+/* Card Shadow */
+.shadow-sm {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.shadow {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}

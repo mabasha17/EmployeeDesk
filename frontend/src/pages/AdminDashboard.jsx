@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react"; // eslint-disable-line no-unused-vars
+import { Container, Row, Col, Card, Alert, Spinner } from "react-bootstrap";
 import {
-  Container,
-  Row,
-  Col,
-  Card,
-  Alert,
-  Table,
-  Badge,
-  Spinner,
-} from "react-bootstrap";
-import { FaUsers, FaChartBar, FaUserClock, FaUserCheck } from "react-icons/fa";
+  FaUsers,
+  FaChartBar,
+  FaUserClock,
+  FaUserCheck,
+  FaTasks,
+  FaCalendarAlt,
+  FaMoneyBillWave,
+  FaUserTie,
+} from "react-icons/fa";
 import { api } from "../config";
 import { useAuth } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
@@ -26,8 +26,6 @@ const AdminDashboard = () => {
     pendingLeaves: 0,
     totalDepartments: 0,
   });
-  const [recentLeaves, setRecentLeaves] = useState([]);
-  const [recentEmployees, setRecentEmployees] = useState([]);
   const [error, setError] = useState(null);
   const [errorDetails, setErrorDetails] = useState({});
   const [loading, setLoading] = useState(true);
@@ -41,9 +39,10 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
       try {
         console.log("Starting to fetch dashboard data...");
-        console.log("Token:", token ? "Present" : "Missing");
+        const currentToken = localStorage.getItem("token");
+        console.log("Token:", currentToken ? "Present" : "Missing");
 
-        if (!token) {
+        if (!currentToken) {
           throw new Error("No authentication token found. Please login again.");
         }
 
@@ -83,70 +82,10 @@ const AdminDashboard = () => {
         } catch (statsError) {
           console.error("Error fetching stats:", statsError);
           setErrorDetails((prev) => ({ ...prev, stats: statsError.message }));
-          // Continue with other requests instead of throwing
         }
 
         // Set stats regardless, using what we have
         setStats(tempStats);
-
-        // Initialize arrays for data that might not be fetched successfully
-        let tempRecentEmployees = [];
-        let tempRecentLeaves = [];
-
-        // Fetch recent employees
-        try {
-          console.log("Fetching recent employees...");
-          const recentEmployeesResponse = await api.get(
-            "/admin/employees/recent"
-          );
-          console.log(
-            "Recent employees response:",
-            recentEmployeesResponse.data
-          );
-
-          if (
-            recentEmployeesResponse.data &&
-            recentEmployeesResponse.data.data
-          ) {
-            tempRecentEmployees = recentEmployeesResponse.data.data;
-          } else {
-            console.warn(
-              "Employee data format is not as expected:",
-              recentEmployeesResponse.data
-            );
-          }
-        } catch (employeesError) {
-          console.error("Error fetching employees:", employeesError);
-          setErrorDetails((prev) => ({
-            ...prev,
-            employees: employeesError.message,
-          }));
-          // Continue with other requests
-        }
-
-        // Fetch recent leaves
-        try {
-          console.log("Fetching recent leaves...");
-          const recentLeavesResponse = await api.get("/admin/leaves/recent");
-          console.log("Recent leaves response:", recentLeavesResponse.data);
-
-          if (recentLeavesResponse.data && recentLeavesResponse.data.data) {
-            tempRecentLeaves = recentLeavesResponse.data.data;
-          } else {
-            console.warn(
-              "Leaves data format is not as expected:",
-              recentLeavesResponse.data
-            );
-          }
-        } catch (leavesError) {
-          console.error("Error fetching leaves:", leavesError);
-          setErrorDetails((prev) => ({ ...prev, leaves: leavesError.message }));
-          // Continue with rendering what we have
-        }
-
-        // Set the data we've collected
-        setRecentEmployees(tempRecentEmployees);
-        setRecentLeaves(tempRecentLeaves);
 
         // If we have all our data, clear any existing error
         setError(null);
@@ -172,8 +111,6 @@ const AdminDashboard = () => {
           pendingLeaves: 0,
           totalDepartments: 0,
         });
-        setRecentEmployees([]);
-        setRecentLeaves([]);
       } finally {
         setLoading(false);
       }
@@ -184,20 +121,33 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <Container className="mt-5">
-        <div className="d-flex justify-content-center">
-          <Spinner animation="border" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </Spinner>
+      <Container fluid className="dashboard-loading">
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ height: "80vh" }}
+        >
+          <div className="text-center">
+            <Spinner
+              animation="border"
+              role="status"
+              variant="primary"
+              style={{ width: "3rem", height: "3rem" }}
+            />
+            <h4 className="mt-3">Loading Dashboard...</h4>
+          </div>
         </div>
       </Container>
     );
   }
 
+  const navigateTo = (path) => {
+    navigate(path);
+  };
+
   return (
-    <Container className="mt-4">
+    <Container fluid className="dashboard-container py-4 px-4">
       {error && (
-        <Alert variant="danger" className="mb-4">
+        <Alert variant="danger" className="mb-4 shadow-sm">
           <h4>Error Loading Dashboard</h4>
           <p>{error}</p>
           {Object.keys(errorDetails).length > 0 && (
@@ -205,10 +155,6 @@ const AdminDashboard = () => {
               <p>Error Details:</p>
               <ul>
                 {errorDetails.stats && <li>Stats: {errorDetails.stats}</li>}
-                {errorDetails.employees && (
-                  <li>Employees: {errorDetails.employees}</li>
-                )}
-                {errorDetails.leaves && <li>Leaves: {errorDetails.leaves}</li>}
               </ul>
             </div>
           )}
@@ -218,149 +164,127 @@ const AdminDashboard = () => {
         </Alert>
       )}
 
-      <h2 className="mb-4">Admin Dashboard</h2>
+      <div className="dashboard-header mb-4">
+        <div className="bg-primary text-white p-4 rounded shadow">
+          <h2 className="mb-2">Welcome to Admin Dashboard</h2>
+          <p className="mb-0">
+            Here&apos;s an overview of your employee management system
+          </p>
+        </div>
+      </div>
 
       {/* Stats Cards */}
-      <Row className="mb-4">
-        <Col md={3}>
-          <Card className="stat-card">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-0">Total Employees</h6>
-                  <h3 className="mb-0">{stats.totalEmployees}</h3>
-                </div>
-                <FaUsers className="stat-icon" />
+      <Row className="mb-4 g-3">
+        <Col md={3} sm={6}>
+          <Card className="stat-card h-100 shadow-sm border-0 hover-effect">
+            <Card.Body className="d-flex flex-column align-items-center p-4">
+              <div className="icon-container bg-primary-light rounded-circle mb-3">
+                <FaUsers className="stat-icon text-primary" />
               </div>
+              <h3 className="stat-value">{stats.totalEmployees}</h3>
+              <p className="stat-label text-muted mb-0">Total Employees</p>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="stat-card">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-0">Active Employees</h6>
-                  <h3 className="mb-0">{stats.activeEmployees}</h3>
-                </div>
-                <FaUserCheck className="stat-icon" />
+        <Col md={3} sm={6}>
+          <Card className="stat-card h-100 shadow-sm border-0 hover-effect">
+            <Card.Body className="d-flex flex-column align-items-center p-4">
+              <div className="icon-container bg-success-light rounded-circle mb-3">
+                <FaUserCheck className="stat-icon text-success" />
               </div>
+              <h3 className="stat-value">{stats.activeEmployees}</h3>
+              <p className="stat-label text-muted mb-0">Active Employees</p>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="stat-card">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-0">Pending Leaves</h6>
-                  <h3 className="mb-0">{stats.pendingLeaves}</h3>
-                </div>
-                <FaUserClock className="stat-icon" />
+        <Col md={3} sm={6}>
+          <Card className="stat-card h-100 shadow-sm border-0 hover-effect">
+            <Card.Body className="d-flex flex-column align-items-center p-4">
+              <div className="icon-container bg-warning-light rounded-circle mb-3">
+                <FaUserClock className="stat-icon text-warning" />
               </div>
+              <h3 className="stat-value">{stats.pendingLeaves}</h3>
+              <p className="stat-label text-muted mb-0">Pending Leaves</p>
             </Card.Body>
           </Card>
         </Col>
-        <Col md={3}>
-          <Card className="stat-card">
-            <Card.Body>
-              <div className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h6 className="text-muted mb-0">Departments</h6>
-                  <h3 className="mb-0">{stats.totalDepartments}</h3>
-                </div>
-                <FaChartBar className="stat-icon" />
+        <Col md={3} sm={6}>
+          <Card className="stat-card h-100 shadow-sm border-0 hover-effect">
+            <Card.Body className="d-flex flex-column align-items-center p-4">
+              <div className="icon-container bg-info-light rounded-circle mb-3">
+                <FaChartBar className="stat-icon text-info" />
               </div>
+              <h3 className="stat-value">{stats.totalDepartments}</h3>
+              <p className="stat-label text-muted mb-0">Departments</p>
             </Card.Body>
           </Card>
         </Col>
       </Row>
 
-      {/* Recent Employees */}
-      <Row className="mb-4">
-        <Col md={6}>
-          <Card>
-            <Card.Header>
-              <h5 className="mb-0">Recent Employees</h5>
-            </Card.Header>
-            <Card.Body>
-              {recentEmployees.length > 0 ? (
-                <Table hover responsive>
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Department</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentEmployees.map((employee) => (
-                      <tr key={employee._id}>
-                        <td>{employee.name}</td>
-                        <td>{employee.department}</td>
-                        <td>
-                          <Badge
-                            bg={
-                              employee.status === "active"
-                                ? "success"
-                                : "warning"
-                            }
-                          >
-                            {employee.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              ) : (
-                <p className="text-muted">No recent employees</p>
-              )}
+      {/* Quick Action Cards */}
+      <h4 className="section-title mb-3">Quick Access</h4>
+      <Row className="mb-4 g-3">
+        <Col md={3} sm={6}>
+          <Card
+            className="action-card border-0 shadow-sm hover-effect"
+            onClick={() => navigateTo("/admin/employees")}
+          >
+            <Card.Body className="d-flex align-items-center p-4">
+              <div className="icon-container-sm bg-primary-light rounded-circle me-3">
+                <FaUserTie className="text-primary" />
+              </div>
+              <div>
+                <h5 className="mb-1">Employees</h5>
+                <p className="text-muted mb-0">Manage all employees</p>
+              </div>
             </Card.Body>
           </Card>
         </Col>
-
-        {/* Recent Leaves */}
-        <Col md={6}>
-          <Card>
-            <Card.Header>
-              <h5 className="mb-0">Recent Leave Requests</h5>
-            </Card.Header>
-            <Card.Body>
-              {recentLeaves.length > 0 ? (
-                <Table hover responsive>
-                  <thead>
-                    <tr>
-                      <th>Employee</th>
-                      <th>Type</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentLeaves.map((leave) => (
-                      <tr key={leave._id}>
-                        <td>{leave.employeeName}</td>
-                        <td>{leave.type}</td>
-                        <td>
-                          <Badge
-                            bg={
-                              leave.status === "approved"
-                                ? "success"
-                                : leave.status === "pending"
-                                ? "warning"
-                                : "danger"
-                            }
-                          >
-                            {leave.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              ) : (
-                <p className="text-muted">No recent leave requests</p>
-              )}
+        <Col md={3} sm={6}>
+          <Card
+            className="action-card border-0 shadow-sm hover-effect"
+            onClick={() => navigateTo("/admin/attendance")}
+          >
+            <Card.Body className="d-flex align-items-center p-4">
+              <div className="icon-container-sm bg-success-light rounded-circle me-3">
+                <FaTasks className="text-success" />
+              </div>
+              <div>
+                <h5 className="mb-1">Attendance</h5>
+                <p className="text-muted mb-0">Track daily records</p>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3} sm={6}>
+          <Card
+            className="action-card border-0 shadow-sm hover-effect"
+            onClick={() => navigateTo("/admin/leaves")}
+          >
+            <Card.Body className="d-flex align-items-center p-4">
+              <div className="icon-container-sm bg-warning-light rounded-circle me-3">
+                <FaCalendarAlt className="text-warning" />
+              </div>
+              <div>
+                <h5 className="mb-1">Leaves</h5>
+                <p className="text-muted mb-0">Manage requests</p>
+              </div>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3} sm={6}>
+          <Card
+            className="action-card border-0 shadow-sm hover-effect"
+            onClick={() => navigateTo("/admin/salaries")}
+          >
+            <Card.Body className="d-flex align-items-center p-4">
+              <div className="icon-container-sm bg-info-light rounded-circle me-3">
+                <FaMoneyBillWave className="text-info" />
+              </div>
+              <div>
+                <h5 className="mb-1">Salaries</h5>
+                <p className="text-muted mb-0">Process payments</p>
+              </div>
             </Card.Body>
           </Card>
         </Col>
