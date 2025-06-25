@@ -22,6 +22,17 @@ dotenv.config();
 
 const app = express();
 
+
+// CORS Configuration
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
+
 // Security Middleware
 app.use(helmet());
 app.use(compression());
@@ -34,15 +45,7 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS Configuration
-const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-  optionsSuccessStatus: 200,
-};
-app.use(cors(corsOptions));
+
 
 // Logging
 app.use(morgan("dev"));
