@@ -41,6 +41,14 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const logout = () => {
+    console.log("Logging out...");
+    localStorage.removeItem("token");
+    setUser(null);
+    setError(null);
+    window.location.href = "/login"; // Redirect to login on logout
+  };
+
   useEffect(() => {
     // Check if user is logged in
     const token = localStorage.getItem("token");
@@ -91,8 +99,7 @@ export const AuthProvider = ({ children }) => {
           err.message ||
           "Failed to fetch user profile"
       );
-      localStorage.removeItem("token");
-      setUser(null);
+      logout(); // Use logout to clear state and redirect
     } finally {
       setLoading(false);
     }
@@ -178,8 +185,8 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       console.error("Login error details:", err);
 
-      // Clear token on login failure
-      localStorage.removeItem("token");
+      // Clear token on any login failure
+      logout();
 
       // Provide more specific error messages
       if (err.response) {
@@ -237,13 +244,6 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const logout = () => {
-    console.log("Logging out...");
-    localStorage.removeItem("token");
-    setUser(null);
-    setError(null);
   };
 
   const isAuthenticated = () => !!user && !!localStorage.getItem("token");

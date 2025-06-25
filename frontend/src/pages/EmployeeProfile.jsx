@@ -22,8 +22,8 @@ function EmployeeProfile() {
   useEffect(() => {
     const fetchEmployeeProfile = async () => {
       try {
-        const response = await api.get("/employees/profile");
-        setEmployee(response.data);
+        const response = await api.get("/admin/employee/profile");
+        setEmployee(response.data.data);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching profile:", error);

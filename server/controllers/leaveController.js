@@ -1,4 +1,5 @@
 import Leave from "../models/Leave.js";
+import Employee from "../models/Employee.js";
 
 // Get all leave requests
 export const getAllLeaves = async (req, res) => {
@@ -31,17 +32,13 @@ export const createLeave = async (req, res) => {
   try {
     const { startDate, endDate, reason, type } = req.body;
 
-    // Access _id consistently across the application
-    const userId = req.user._id;
-
-    console.log("Creating leave request:", {
-      userId,
-      startDate,
-      endDate,
-      reason,
-      type,
-      user: req.user, // Log full user object for debugging
-    });
+    // Find the Employee document for the logged-in user
+    const employee = await Employee.findOne({ user: req.user._id });
+    if (!employee) {
+      return res
+        .status(400)
+        .json({ error: "Employee profile not found for user." });
+    }
 
     // Validate leave type to match enum values in model
     const validTypes = ["sick", "vacation", "personal", "annual", "other"];
@@ -49,7 +46,7 @@ export const createLeave = async (req, res) => {
 
     // Create leave object
     const leave = new Leave({
-      employee: userId, // Consistently using _id
+      employee: employee._id, // Use Employee's _id
       startDate,
       endDate,
       reason,
@@ -59,11 +56,8 @@ export const createLeave = async (req, res) => {
 
     // Save the leave request
     const savedLeave = await leave.save();
-    console.log("Leave saved successfully:", savedLeave);
-
     res.status(201).json(savedLeave);
   } catch (error) {
-    console.error("Error creating leave:", error);
     res.status(500).json({
       error: "Failed to create leave request",
       message: error.message,

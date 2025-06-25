@@ -24,9 +24,13 @@ const ApplyLeave = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem("token");
-      await axios.post("http://localhost:5000/api/leaves", formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.post(
+        "http://localhost:5000/api/leaves/employee/leaves",
+        formData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       navigate("/employee/leaves");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to submit leave request");

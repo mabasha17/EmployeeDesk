@@ -13,7 +13,6 @@ import leaveRoutes from "./routes/leaveRoutes.js";
 import salaryRoutes from "./routes/salaryRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
-import employeeRoutes from "./routes/employee.js";
 
 // Import user seed function
 import userSeed from "./userSeed.js";
@@ -56,13 +55,10 @@ app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 // 1. Auth routes (no auth middleware)
 app.use("/api/auth", authRoutes);
 
-// 2. Employee routes (protected)
-app.use("/api/employees", employeeRoutes);
-
-// 3. Admin routes (protected)
+// 2. Admin routes (protected)
 app.use("/api/admin", adminRoutes);
 
-// 4. Other protected routes
+// 3. Other protected routes
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/salaries", salaryRoutes);
 app.use("/api/attendance", attendanceRoutes);

@@ -11,7 +11,7 @@ import {
   Spinner,
 } from "react-bootstrap";
 import { api } from "../config";
-import { useAuth } from "../context/authContext";
+import { useAuth } from "../context/authContext.jsx";
 
 const EmployeeLeave = () => {
   const { user } = useAuth();
@@ -36,28 +36,9 @@ const EmployeeLeave = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log("Fetching employee leaves...");
-
-      // Try both possible API endpoints
-      try {
-        const response = await api.get("/leaves/employee/leaves");
-        console.log("Leaves response:", response.data);
-        setLeaves(response.data);
-      } catch (endpointError) {
-        console.log("Trying alternative endpoint...");
-        const altResponse = await api.get("/admin/leaves");
-        console.log("Leaves from alternative endpoint:", altResponse.data);
-        // Filter leaves for current user if needed
-        const userLeaves = user
-          ? altResponse.data.filter(
-              (leave) =>
-                leave.employee?._id === user._id || leave.employee === user._id
-            )
-          : altResponse.data;
-        setLeaves(userLeaves);
-      }
+      const response = await api.get("/employee/leaves");
+      setLeaves(response.data);
     } catch (err) {
-      console.error("Error fetching leaves:", err);
       setError(err.response?.data?.message || "Failed to fetch leave requests");
     } finally {
       setLoading(false);
@@ -88,79 +69,29 @@ const EmployeeLeave = () => {
     setSubmitLoading(true);
     setError(null);
     setSuccessMessage("");
-
     try {
       // Validate dates
       const start = new Date(formData.startDate);
       const end = new Date(formData.endDate);
-
       if (end < start) {
         setError("End date cannot be before start date");
         setSubmitLoading(false);
         return;
       }
-
-      console.log("Submitting leave request:", formData);
-
-      // Try multiple possible API endpoints in sequence
-      let leaveSubmitted = false;
-
-      try {
-        // Try direct leaves endpoint first (most reliable)
-        const response = await api.post("/leaves", formData);
-        console.log("Leave request submitted successfully:", response.data);
-        leaveSubmitted = true;
-      } catch (error1) {
-        console.log("First endpoint failed, trying second endpoint...", error1);
-
-        try {
-          // Try employee leaves endpoint
-          const response = await api.post("/leaves/employee/leaves", formData);
-          console.log(
-            "Leave request submitted via second endpoint:",
-            response.data
-          );
-          leaveSubmitted = true;
-        } catch (error2) {
-          console.log(
-            "Second endpoint failed, trying third endpoint...",
-            error2
-          );
-
-          try {
-            // Try admin leaves endpoint as last resort
-            const response = await api.post("/admin/leaves", formData);
-            console.log(
-              "Leave request submitted via third endpoint:",
-              response.data
-            );
-            leaveSubmitted = true;
-          } catch (error3) {
-            console.log("Third endpoint failed", error3);
-            // All endpoints failed, throw the last error to be caught by the outer catch
-            throw error3;
-          }
-        }
-      }
-
-      if (leaveSubmitted) {
-        setSuccessMessage("Leave request submitted successfully!");
-        setTimeout(() => {
-          handleCloseModal();
-          fetchLeaves();
-        }, 1500);
-      }
+      await api.post("/employee/leaves", formData);
+      setSuccessMessage("Leave request submitted successfully!");
+      setTimeout(() => {
+        handleCloseModal();
+        fetchLeaves();
+      }, 1500);
     } catch (err) {
-      console.error("Error submitting leave request:", err);
       let errorMessage = "Failed to submit leave request. Please try again.";
-
       if (err.response) {
         errorMessage =
           err.response.data?.message ||
           err.response.data?.error ||
           errorMessage;
       }
-
       setError(errorMessage);
     } finally {
       setSubmitLoading(false);

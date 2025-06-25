@@ -143,67 +143,195 @@ export const getRecentSalaries = async (req, res) => {
 
 export const createEmployee = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      department,
-      position,
-      salary,
-      joiningDate,
-      contactNumber,
-      address,
-    } = req.body;
+    console.log("=== Creating Employee ===");
+    console.log("Request body:", req.body);
 
-    // Check if employee already exists
-    const existingEmployee = await Employee.findOne({ email });
-    if (existingEmployee) {
+    const { name, email, password, department, salary, joiningDate, phone } =
+      req.body;
+
+    // Validate required fields
+    if (
+      !name ||
+      !email ||
+      !password ||
+      !department ||
+      !salary ||
+      !joiningDate
+    ) {
+      console.log("Missing required fields");
       return res.status(400).json({
         success: false,
-        message: "Employee with this email already exists",
+        message:
+          "Missing required fields: name, email, password, department, salary, joiningDate",
+      });
+    }
+
+    // Check if user already exists (since email uniqueness is on User model)
+    console.log("Checking for existing user with email:", email);
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      console.log("User already exists with email:", email);
+      return res.status(400).json({
+        success: false,
+        message:
+          "A user with this email address already exists. Please use a different email.",
+      });
+    }
+
+    // Also check if employee already exists with this email
+    console.log("Checking for existing employee with email:", email);
+    const existingEmployee = await Employee.findOne({
+      email: email.toLowerCase(),
+    });
+    if (existingEmployee) {
+      console.log("Employee already exists with email:", email);
+      return res.status(400).json({
+        success: false,
+        message:
+          "An employee with this email address already exists. Please use a different email.",
       });
     }
 
     // Hash password
+    console.log("Hashing password...");
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user account first
+    console.log("Creating user account...");
     const newUser = new User({
       name,
-      email,
+      email: email.toLowerCase(),
       password: hashedPassword,
       role: "employee",
     });
-    await newUser.save();
+
+    try {
+      await newUser.save();
+      console.log("User created successfully with ID:", newUser._id);
+    } catch (userError) {
+      console.error("Error creating user:", userError);
+      if (userError.code === 11000 && userError.keyPattern.email) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "A user with this email address already exists. Please use a different email.",
+        });
+      }
+      throw userError;
+    }
 
     // Create new employee with reference to user
-    const newEmployee = new Employee({
+    console.log("Creating employee record...");
+    const employeeData = {
       user: newUser._id, // Link to the created user
       name,
-      email,
+      email: email.toLowerCase(),
       department,
-      position,
-      salary,
-      joiningDate,
-      contactNumber,
-      address,
+      salary: Number(salary),
+      joiningDate: new Date(joiningDate),
+      phone,
       status: "active",
-    });
-    await newEmployee.save();
+    };
 
+    const newEmployee = new Employee(employeeData);
+
+    console.log("Employee object before save:", {
+      user: newEmployee.user,
+      name: newEmployee.name,
+      email: newEmployee.email,
+      department: newEmployee.department,
+      salary: newEmployee.salary,
+      joiningDate: newEmployee.joiningDate,
+      employeeId: newEmployee.employeeId, // This should be undefined initially
+    });
+
+    try {
+      await newEmployee.save();
+      console.log("Employee saved successfully with ID:", newEmployee._id);
+      console.log("Generated employeeId:", newEmployee.employeeId);
+    } catch (employeeError) {
+      console.error("Error creating employee:", employeeError);
+
+      // If employee creation fails, delete the user we just created
+      try {
+        await User.findByIdAndDelete(newUser._id);
+        console.log("Deleted user due to employee creation failure");
+      } catch (deleteError) {
+        console.error(
+          "Error deleting user after employee creation failure:",
+          deleteError
+        );
+      }
+
+      if (employeeError.code === 11000) {
+        if (employeeError.keyPattern.email) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "An employee with this email address already exists. Please use a different email.",
+          });
+        }
+        if (employeeError.keyPattern.employeeId) {
+          return res.status(400).json({
+            success: false,
+            message: "Employee ID generation error. Please try again.",
+          });
+        }
+      }
+
+      if (employeeError.name === "ValidationError") {
+        return res.status(400).json({
+          success: false,
+          message: employeeError.message,
+        });
+      }
+
+      throw employeeError;
+    }
+
+    // Populate user data in response
+    console.log("Populating user data...");
+    const populatedEmployee = await Employee.findById(newEmployee._id).populate(
+      "user",
+      "name email role"
+    );
+
+    console.log("=== Employee Creation Complete ===");
     res.status(201).json({
       success: true,
       message: "Employee created successfully",
-      data: {
-        id: newEmployee._id,
-        name: newEmployee.name,
-        email: newEmployee.email,
-        department: newEmployee.department,
-        position: newEmployee.position,
-      },
+      data: populatedEmployee,
     });
   } catch (error) {
-    console.error("Error creating employee:", error);
+    console.error("=== Error Creating Employee ===");
+    console.error("Error details:", error);
+
+    // Handle duplicate email error
+    if (error.code === 11000) {
+      if (error.keyPattern.email) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "A user with this email address already exists. Please use a different email.",
+        });
+      }
+      if (error.keyPattern.employeeId) {
+        return res.status(400).json({
+          success: false,
+          message: "Employee ID generation error. Please try again.",
+        });
+      }
+    }
+
+    // Handle validation errors
+    if (error.name === "ValidationError") {
+      console.error("Validation error details:", error.message);
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Error creating employee",
@@ -214,7 +342,9 @@ export const createEmployee = async (req, res) => {
 
 export const getEmployees = async (req, res) => {
   try {
-    const employees = await Employee.find().sort({ createdAt: -1 });
+    const employees = await Employee.find()
+      .populate("user", "name email role")
+      .sort({ createdAt: -1 });
     res.json({ success: true, data: employees });
   } catch (error) {
     console.error("Error fetching employees:", error);
@@ -229,33 +359,45 @@ export const getEmployees = async (req, res) => {
 export const updateEmployee = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    const { name, department, salary, joiningDate, phone, status } = req.body;
 
-    // If password is being updated, hash it
-    if (updateData.password) {
-      updateData.password = await bcrypt.hash(updateData.password, 10);
-    }
-
-    const updatedEmployee = await Employee.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
-
-    if (!updatedEmployee) {
+    // Find employee first
+    const employee = await Employee.findById(id);
+    if (!employee) {
       return res.status(404).json({
         success: false,
         message: "Employee not found",
       });
     }
 
-    // Also update the corresponding user account if email or password was changed
-    if (updateData.email || updateData.password) {
-      await User.findOneAndUpdate(
-        { email: updatedEmployee.email },
-        {
-          email: updateData.email || updatedEmployee.email,
-          password: updateData.password || undefined,
-        }
-      );
+    // If password is being updated, hash it
+    if (req.body.password) {
+      req.body.password = await bcrypt.hash(req.body.password, 10);
+    }
+
+    // Convert salary to number if provided
+    if (salary) {
+      req.body.salary = Number(salary);
+    }
+
+    // Convert joiningDate to Date if provided
+    if (joiningDate) {
+      req.body.joiningDate = new Date(joiningDate);
+    }
+
+    // Update employee
+    const updatedEmployee = await Employee.findByIdAndUpdate(id, req.body, {
+      new: true,
+    }).populate("user", "name email role");
+
+    // Also update the corresponding user account if email, name, or password was changed
+    if (req.body.email || req.body.name || req.body.password) {
+      const userUpdateData = {};
+      if (req.body.email) userUpdateData.email = req.body.email;
+      if (req.body.name) userUpdateData.name = req.body.name;
+      if (req.body.password) userUpdateData.password = req.body.password;
+
+      await User.findByIdAndUpdate(employee.user, userUpdateData);
     }
 
     res.json({
@@ -265,6 +407,26 @@ export const updateEmployee = async (req, res) => {
     });
   } catch (error) {
     console.error("Error updating employee:", error);
+
+    // Handle duplicate email error
+    if (error.code === 11000) {
+      if (error.keyPattern.email) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "A user with this email address already exists. Please use a different email.",
+        });
+      }
+    }
+
+    // Handle validation errors
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
     res.status(500).json({
       success: false,
       message: "Error updating employee",
@@ -285,10 +447,10 @@ export const deleteEmployee = async (req, res) => {
       });
     }
 
-    // Delete both employee and user account
+    // Delete both employee and user account using the user reference
     await Promise.all([
       Employee.findByIdAndDelete(id),
-      User.findOneAndDelete({ email: employee.email }),
+      User.findByIdAndDelete(employee.user),
     ]);
 
     res.json({
@@ -308,7 +470,10 @@ export const deleteEmployee = async (req, res) => {
 export const getEmployeeById = async (req, res) => {
   try {
     const { id } = req.params;
-    const employee = await Employee.findById(id);
+    const employee = await Employee.findById(id).populate(
+      "user",
+      "name email role"
+    );
 
     if (!employee) {
       return res.status(404).json({

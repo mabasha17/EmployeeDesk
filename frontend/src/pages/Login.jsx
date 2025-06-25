@@ -1,6 +1,6 @@
 import React, { useState } from "react"; // eslint-disable-line no-unused-vars
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/authContext";
 import { Container, Card, Form, Button, Alert } from "react-bootstrap";
 
 const Login = () => {

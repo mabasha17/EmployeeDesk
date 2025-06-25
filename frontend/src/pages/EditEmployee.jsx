@@ -26,15 +26,22 @@ function EditEmployee() {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5000/api/employees/${id}`,
+        `http://localhost:5000/api/admin/employees/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setFormData(response.data);
+
+      if (response.data.success) {
+        setFormData(response.data.data);
+      } else {
+        setError(response.data.message || "Failed to fetch employee data");
+      }
       setLoading(false);
     } catch (error) {
-      setError(error.response?.data?.error || "Failed to fetch employee data");
+      setError(
+        error.response?.data?.message || "Failed to fetch employee data"
+      );
       setLoading(false);
     }
   }, [id]);
@@ -55,12 +62,21 @@ function EditEmployee() {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`http://localhost:5000/api/employees/${id}`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      navigate("/employees");
+      const response = await axios.put(
+        `http://localhost:5000/api/admin/employees/${id}`,
+        formData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.success) {
+        navigate("/employees");
+      } else {
+        setError(response.data.message || "Failed to update employee");
+      }
     } catch (error) {
-      setError(error.response?.data?.error || "Failed to update employee");
+      setError(error.response?.data?.message || "Failed to update employee");
     }
   };
 

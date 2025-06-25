@@ -18,9 +18,15 @@ export const EmployeeProvider = ({ children }) => {
       const response = await axios.get(`${API_URL}/admin/employees`, {
         headers: getAuthHeader(),
       });
-      setEmployees(response.data);
-      setError(null);
+
+      if (response.data.success) {
+        setEmployees(response.data.data);
+        setError(null);
+      } else {
+        setError(response.data.message || "Failed to fetch employees");
+      }
     } catch (err) {
+      console.error("Error fetching employees:", err);
       setError(err.response?.data?.message || "Failed to fetch employees");
     } finally {
       setLoading(false);
@@ -37,6 +43,7 @@ export const EmployeeProvider = ({ children }) => {
           headers: getAuthHeader(),
         }
       );
+
       if (response.data.success) {
         setEmployees((prevEmployees) => [...prevEmployees, response.data.data]);
         setError(null);
@@ -45,6 +52,7 @@ export const EmployeeProvider = ({ children }) => {
         throw new Error(response.data.message || "Failed to add employee");
       }
     } catch (err) {
+      console.error("Error adding employee:", err);
       setError(err.response?.data?.message || "Failed to add employee");
       throw err;
     } finally {
@@ -62,12 +70,18 @@ export const EmployeeProvider = ({ children }) => {
           headers: getAuthHeader(),
         }
       );
-      setEmployees(
-        employees.map((emp) => (emp._id === id ? response.data : emp))
-      );
-      setError(null);
-      return response.data;
+
+      if (response.data.success) {
+        setEmployees(
+          employees.map((emp) => (emp._id === id ? response.data.data : emp))
+        );
+        setError(null);
+        return response.data;
+      } else {
+        throw new Error(response.data.message || "Failed to update employee");
+      }
     } catch (err) {
+      console.error("Error updating employee:", err);
       setError(err.response?.data?.message || "Failed to update employee");
       throw err;
     } finally {
@@ -78,12 +92,18 @@ export const EmployeeProvider = ({ children }) => {
   const deleteEmployee = async (id) => {
     try {
       setLoading(true);
-      await axios.delete(`${API_URL}/admin/employees/${id}`, {
+      const response = await axios.delete(`${API_URL}/admin/employees/${id}`, {
         headers: getAuthHeader(),
       });
-      setEmployees(employees.filter((emp) => emp._id !== id));
-      setError(null);
+
+      if (response.data.success) {
+        setEmployees(employees.filter((emp) => emp._id !== id));
+        setError(null);
+      } else {
+        throw new Error(response.data.message || "Failed to delete employee");
+      }
     } catch (err) {
+      console.error("Error deleting employee:", err);
       setError(err.response?.data?.message || "Failed to delete employee");
       throw err;
     } finally {
